@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.ProfileDao">
+	<insert id="saveConfInfo" parameterType="com.alimu.probe.entity.ConfInfo"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into conf_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="cpuRate!=null">cpu_rate,</if>
+			<if test="ramLevel!=null">ram_level,</if>
+			<if test="diskLevel!=null">disk_level,</if>
+			<if test="vedioDur!=null">vedio_dur,</if>
+			<if test="screenNum!=null">screen_num,</if>
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="warningmsg!=null">warningmsg,</if>
+			<if test="duration!=null">duration,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="cpuRate!=null">#{cpuRate,jdbcType=DECIMAL},</if>
+			<if test="ramLevel!=null">#{ramLevel,jdbcType=DECIMAL},</if>
+			<if test="diskLevel!=null">#{diskLevel,jdbcType=DECIMAL},</if>
+			<if test="vedioDur!=null">#{vedioDur,jdbcType=TINYINT},</if>
+			<if test="screenNum!=null">#{screenNum,jdbcType=TINYINT},</if>
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="warningmsg!=null">#{warningmsg,jdbcType=VARCHAR},</if>
+			<if test="duration!=null">#{duration,jdbcType=INTEGER},</if>
+		</trim>
+	</insert>
+
+	<update id="updateConfInfo" parameterType="com.alimu.probe.entity.ConfInfo"
+		useGeneratedKeys="true" keyProperty="id">
+		update conf_info
+		<set>
+			<if test="cpuRate!=null"> cpu_rate=#{cpuRate},</if>
+			<if test="ramLevel!=null"> ram_level=#{ramLevel},</if>
+			<if test="diskLevel!=null"> disk_level=#{diskLevel},</if>
+			<if test="vedioDur!=null"> vedio_dur=#{vedioDur},</if>
+			<if test="screenNum!=null"> screen_num=#{screenNum},</if>
+			<if test="warningmsg!=null"> warningmsg=#{warningmsg},</if>
+			<if test="duration!=null"> duration=#{duration},</if>
+		</set>
+		where school_code=#{schoolCode}
+	</update>
+
+	<select id="getConfInfoBySchoolId" resultType="com.alimu.probe.entity.ConfInfo">
+		select * from conf_info 
+		where school_code=#{schoolCode}
+	</select>
+
+	<insert id="saveSoftList" parameterType="com.alimu.probe.entity.SoftList"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into soft_list
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="isWhite!=null">is_white,</if>
+			<if test="softwareName!=null">software_name,</if>
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="level!=null">level,</if>
+			<if test="warning!=null">warning,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="isWhite!=null">#{isWhite,jdbcType=TINYINT},</if>
+			<if test="softwareName!=null">#{softwareName,jdbcType=VARCHAR},</if>
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="level!=null">#{level,jdbcType=TINYINT},</if>
+			<if test="warning!=null">#{warning,jdbcType=VARCHAR},</if>
+		</trim>
+	</insert>
+
+	<update id="updateSoftList" parameterType="com.alimu.probe.entity.SoftList">
+		update soft_list
+		<set>
+			<if test="softwareName!=null"> software_name=#{softwareName},</if>
+			<if test="isWhite!=null"> is_white=#{isWhite},</if>
+			<if test="level!=null"> level=#{level},</if>
+			<if test="warning!=null"> warning=#{warning},</if>
+		</set>
+		where id=#{id}
+	</update>
+
+	<select id="getSoftList" parameterType="com.alimu.probe.entity.SoftList"
+		resultType="com.alimu.probe.entity.SoftList">
+		select id,software_name,is_white,level ,warning from 
+		soft_list
+		<where>
+			<if test="schoolCode !=null"> and school_code =#{schoolCode}</if>
+			<if test="id !=null"> and id =#{id}</if>
+			<if test="isWhite !=null">and is_white=#{isWhite}</if>
+		</where>
+		order by id desc
+	</select>
+	<select id="getSoftListById" parameterType="long" resultType="com.alimu.probe.entity.SoftList">
+		select * from soft_list where id=#{id}
+	</select>
+
+	<delete id="delSoftListById" parameterType="long">
+		delete from
+		soft_list
+		where id=#{id}
+	</delete>
+
+	<insert id="saveWebList" parameterType="com.alimu.probe.entity.WebList"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into web_list
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="isWhite!=null">is_white,</if>
+			<if test="webName!=null">web_name,</if>
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="level!=0">level,</if>
+			<if test="warning!=null">warning,</if>
+			<if test="timeSpaced!=null">time_spaced,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="isWhite!=null">#{isWhite,jdbcType=TINYINT},</if>
+			<if test="webName!=null">#{webName,jdbcType=VARCHAR},</if>
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="level!=0">#{level,jdbcType=TINYINT},</if>
+			<if test="warning!=null">#{warning,jdbcType=VARCHAR},</if>
+			<if test="timeSpaced!=null">#{timeSpaced,jdbcType=VARCHAR},</if>
+		</trim>
+	</insert>
+
+	<update id="updateWebList" parameterType="com.alimu.probe.entity.WebList">
+		update web_list
+		<set>
+			<if test="webName!=null"> web_name=#{webName},</if>
+			<if test="isWhite!=null"> is_white=#{isWhite},</if>
+			<if test="level!=null"> level=#{level},</if>
+			<if test="warning!=null"> `warning`=#{warning},</if>
+		</set>
+		where id=#{id}
+	</update>
+
+	<select id="getWebList" parameterType="com.alimu.probe.entity.WebList"
+		resultType="com.alimu.probe.entity.WebList">
+		select * from web_list
+		<where>
+			<if test="schoolCode !=null">and school_code =#{schoolCode}</if>
+			<if test="id !=null">and id =#{id} </if>
+			<if test="isWhite!=null">and is_white =#{isWhite} </if>
+		</where>
+		order by id desc
+	</select>
+	
+	<select id="getBroadcastInfoPage" parameterType="com.alimu.probe.entity.BroadcastInfo"
+		resultType="com.alimu.probe.entity.BroadcastInfo">
+		select * from broadcast_info
+		<where>
+			<if test="schoolCode !=null">and school_code=#{schoolCode}</if>
+			<if test="id !=null">and id=#{id} </if>
+			<if test="buildCode!=null">and build_code=#{buildCode} </if>
+		</where>
+		order by id desc
+	</select>
+	
+	<select id="getWebListById" parameterType="long" resultType="com.alimu.probe.entity.WebList">
+		select * from web_list where id=#{id}
+	</select>
+
+	<delete id="delWebListById" parameterType="long">
+		delete from web_list where id=#{id}
+	</delete>
+
+	<insert id="saveBroadcastInfo" parameterType="com.alimu.probe.entity.BroadcastInfo" 
+			useGeneratedKeys="true" keyProperty="id">
+		insert into broadcast_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="schoolName!=null">school_name,</if>
+			<if test="buildCode!=null">build_code,</if>
+			<if test="buildName!=null">build_name,</if>
+			<if test="classCode!=null">class_code,</if>
+			<if test="className!=null">class_name,</if>
+			<if test="beginTime!=null">begin_time,</if>
+			<if test="endTime!=null">end_time,</if>
+			<if test="broadcastSpeed!=null">broadcast_speed,</if>
+			<if test="broadcastText!=null">broadcast_text,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="schoolName!=null">#{schoolName,jdbcType=VARCHAR},</if>
+			<if test="buildCode!=null">#{buildCode,jdbcType=BIGINT},</if>
+			<if test="buildName!=null">#{buildName,jdbcType=VARCHAR},</if>
+			<if test="classCode!=null">#{classCode,jdbcType=BIGINT},</if>
+			<if test="className!=null">#{className,jdbcType=VARCHAR},</if>
+			<if test="beginTime!=null">#{beginTime,jdbcType=TIMESTAMP},</if>
+			<if test="endTime!=null">#{endTime,jdbcType=TIMESTAMP},</if>
+			<if test="broadcastSpeed!=null">#{broadcastSpeed,jdbcType=VARCHAR},</if>
+			<if test="broadcastText!=null">#{broadcastText,jdbcType=VARCHAR},</if>
+		</trim>
+	</insert>
+
+	<select id="getBroadcastById" parameterType="Long" resultType="com.alimu.probe.entity.BroadcastInfo">
+		select * from broadcast_info where id=#{ids}
+	</select>
+
+	<delete id="deleteBroadcastById" parameterType="java.util.List">
+		delete from broadcast_info
+		where id in (${ids})
+	</delete>
+	
+	<select id="getBroadcastInfo" parameterType="Long" resultType="com.alimu.probe.entity.BroadcastInfo">
+		select * from broadcast_info where school_code=#{schoolCode}
+	</select>
+	
+	<select id="getBroadcastInfoByPcMac" parameterType="String" resultType="java.util.Map">
+		select bi.* from broadcast_info bi,probe_bind pb 
+		where bi.school_code=pb.school_code  
+		and pb.pc_mac=#{pcMac}
+	</select>
+
+	<select id="getConfInfoModelBySchoolCode" resultType="java.util.Map">
+		select id,school_code as schoolcode,cpu_rate as cpurate,ram_level as ramlevel,
+		disk_level as disklevel,vedio_dur as vediodur,screen_num as screennum,warningmsg,duration
+		 from conf_info where school_code=#{schoolCode}
+	</select>
+
+	<select id="getRemoteSoftList" parameterType="Long" resultType="java.util.Map">
+		select id,software_name,is_white,level ,warning from 
+		soft_list
+		<where>
+			<if test="schoolCode !=null"> and school_code =#{schoolCode}</if>
+		</where>
+	</select>
+	
+	<select id="getRemoteWebList" parameterType="Long" resultType="java.util.Map">
+		select * from web_list
+		<where>
+			<if test="schoolCode !=null">and school_code =#{schoolCode}</if>
+		</where>
+	</select>
+</mapper>

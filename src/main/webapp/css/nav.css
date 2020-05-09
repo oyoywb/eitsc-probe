@@ -1,0 +1,56 @@
+ #nav {
+    line-height:30px;
+    height:600px;
+    width:165px;
+    padding:5px;
+    margin-left: 10px;
+    margin-top: 43px;
+}
+
+a{
+    color: #fff;
+}
+a:hover{
+    color: #fff;
+}
+
+#flip,#flip1,#flip2,#flip0,#flip3,#flip4,#flip5
+{
+    padding:10px;
+    text-align:center;
+    background-color:#6495ED;
+    cursor: pointer;
+    color: #fff;
+}
+#panel, #panel1,#panel2,#panel3,#panel4,#panel5,#panel6,#panel7,#panel8,#panel9,#panel10,#panel11,
+#panel12,#panel13,#panel14,#panel15
+{
+    text-align:center;
+    background-color:#00BFFF;
+    padding:8px;
+    display:none;
+    cursor: pointer;
+    color: #fff;
+}
+#panel_1,#panel_2,#panel_3,#panel7_1,#panel7_2,#panel9_1,#panel9_2,#panel9_3,#panel9_4,#panel9_5,#panel9_6,
+#panel10_1,#panel10_2,#panel10_3,#panel10_4,#panel10_5,#panel10_6,#panel12_1,#panel13_1,#panel14_1,#panel15_1
+{
+    text-align:center;
+    background-color:#87CEEB;
+    padding:8px;
+    display:none;
+    cursor: pointer;
+    color: #fff;
+}
+#panel7_1_1,#panel7_1_2,#panel7_1_3,#panel7_2_1,#panel7_2_2,#panel7_2_3
+{
+    text-align:center;
+    background-color:#87CEEB;
+    padding:8px;
+    display:none;
+    cursor: pointer;
+    color: #fff;
+}
+.content{
+	height:1200px;
+}

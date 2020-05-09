@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.PcStatisticsDao">
+	<!-- 软件统计 -->
+	<select id="getWhiteSoftStatistics" resultType="java.util.Map">
+		SELECT soft_name as softName,SUM(use_time) as useTime FROM 
+		software_state
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="date!=null"> and
+				date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') </if>
+		</where>
+		and is_white =1 group by soft_name
+	</select>
+	<select id="getSoftAbnormalCount" resultType="java.util.Map">
+		select level,count(id) as count from 
+		software_state
+		<where>
+			<if test="date!=null"> 
+				and date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') 
+			</if>
+		</where>
+		and school_code=#{schoolCode} and is_white=0 
+		group by level
+	</select>
+	<select id="getSoftAbnormalInfo" parameterType="com.alimu.probe.entity.SoftwareState"
+		resultType="com.alimu.probe.resultEntity.AbnormalInfo">
+		select id,class_name,soft_name as name,pc_code, count(id) as count ,warning from
+		software_state
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null"> and build_code=#{buildCode}</if>
+			<if test="date!=null">and
+				date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d')</if>
+		</where>
+		and is_white=0
+		group by pc_code
+	</select>
+
+	<!-- pc设备使用统计 -->
+	<select id="getPcUseStatisticsDetail"
+		resultType="com.alimu.probe.resultEntity.PcUseStatisticsDetail">
+		select class_name ,pc_code,sum(use_time)as use_time ,sum(case when is_normal=0 then 1 else 0 end)
+		as error_count from 
+		pc_state
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null">and build_code=#{buildCode} </if>
+			<if test="date!=null">and
+				date_format(`date`,'%y-%m-%d')=date_format(#{date},'%y-%m-%d')</if>
+		</where>
+		group by pc_code
+	</select>
+	<select id="getPcUseStatistics" resultType="java.util.Map">
+		select pc.school_name as schoolName,a.count as abnormalCount,b.count as onlineCount,
+		b.count/#{totalCount} as onlineRate,
+		IFNULL(sum(pc.use_time)/#{totalCount},0) as useTime from
+		pc_state pc,(select count(distinct pc_code) as count from pc_state where is_normal=0 and school_code=#{schoolCode}
+		and date_format(`date`,'%y-%m-%d')=date_format(#{date},'%y-%m-%d')) a,
+		(select count(distinct pc_code) as count from pc_state where is_normal=1 and school_code=#{schoolCode} 
+		and date_format(`date`,'%y-%m-%d')=date_format(#{date},'%y-%m-%d')) b
+		where pc.school_code=#{schoolCode} and date_format(pc.`date`, '%y-%m-%d')=date_format(#{date}, '%y-%m-%d') 
+	</select>
+
+	<!-- pc性能统计 -->
+	<select id="pcPerfStatistics" resultType="java.util.Map">
+		select avg(cpu_rate) as cpu_rate,avg(ram_rate) as ram_rate,avg(disk_space)
+		as disk_space from cpu_state where school_code=#{schoolCode} and DATE_FORMAT(date,'%y-%m-%d')=DATE_FORMAT(#{date},'%y-%m-%d')
+	</select>
+	<select id="pcAbnormalStatistics" resultType="int">
+		select count(id) as count from cpu_state
+		<where>
+			<if test="type==1"> cpu_warning!='null'</if>
+			<if test="type==2"> ram_warning!='null'</if>
+			<if test="type==3"> space_warning!='null'</if>
+		</where>
+		and school_code=#{schoolCode} and date_format(date,'%y-%m-%d')
+		=date_format(#{date},'%y-%m-%d')
+	</select>
+	<select id="getPcPerfStatisticsDetail"
+		resultType="java.util.Map">
+		select class_name,pc_code,count(id) as
+		count,CONCAT(cpu_warning,' ',ram_warning,' ',space_warning ) as
+		warning from cpu_state
+		<where>
+			<if test="schoolCode != null"> and school_code=#{schoolCode}</if>
+			<if test="buildCode != null"> and build_code=#{buildCode}</if>
+			<if test="date != null"> and date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d')</if>
+		</where>
+		group by pc_code
+	</select>
+
+	<!-- 网站统计 -->
+	<select id="getWhiteWebStatistics" resultType="java.util.Map">
+		select web_name,count(id) as count from web_state   
+		<where>
+			<if test="date!=null"> 
+				and date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') 
+			</if>
+		</where>
+		and is_white=1 and school_code=#{schoolCode}
+		group by web_name
+	</select>
+	<select id="getWebAbnormalCount" resultType="java.util.Map">
+		select level,count(id) as count from web_state 
+		<where>
+			<if test="date!=null"> 
+				and date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') 
+			</if>
+		</where>
+		and is_white=0 and school_code=#{schoolCode}
+		group by level
+	</select>
+	<select id="getWebAbnormalInfo"
+		resultType="com.alimu.probe.resultEntity.AbnormalInfo">
+		select id, class_name ,web_name as name,pc_code, count(id) as count ,warning from
+		web_state
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null"> and build_code=#{buildCode}</if>
+			<if test="date!=null">and date like CONCAT('%',#{date},'%')</if>
+		</where>
+		group by pc_code
+	</select>
+	
+	<!-- pc监控远程接口实现 -->
+	<select id="getPcMonitoring" resultType="java.util.Map">
+		select pc.id,pc.school_name,pc.school_code,date_format(pc.date,'%Y-%m-%d %H:%i:%s') as create_time,a.count as pc_outline_num,b.count as pc_online_num,
+		b.count/#{totalCount} as pc_usage_rate,
+		sum(pc.use_time)/#{totalCount} as pc_usetime from
+		pc_state pc,(select count(pc_code) as count from pc_state where is_normal=0
+			<choose>
+				<when test="schoolCode != null">
+				 	and school_code=#{schoolCode}
+				</when>
+				<when test="regionCode != null">
+					and school_code like CONCAT('%',#{regionCode},'%')
+				</when>
+			</choose>
+		) a,
+		(select count(pc_code) as count from pc_state where is_normal=1
+		<choose>
+			<when test="schoolCode != null">
+			 	and school_code=#{schoolCode}
+			</when>
+			<when test="regionCode != null">
+				and school_code like CONCAT('%',#{regionCode},'%')
+			</when>
+		</choose>
+		) b where 1=1 
+		<choose>
+			<when test="schoolCode != null">
+			 	and school_code=#{schoolCode}
+			</when>
+			<when test="regionCode != null">
+				and school_code like CONCAT('%',#{regionCode},'%')
+			</when>
+		</choose>
+	</select>
+	
+	
+	<!-- 学校列表 -->
+	<select id="getPCSchoolList" resultType="java.util.Map">
+		select distinct school_code from pc_state 
+		where school_code is not null
+		<choose>
+			<when test="regionCode != null">
+				and school_code like CONCAT('%',#{regionCode},'%')
+			</when>
+		</choose>
+	</select>
+	
+	<!-- pc监控总数 -->
+	<select id="getPcCount" resultType="java.lang.Integer">
+		select count(*) from pc_state where 1=1
+			<choose>
+				<when test="schoolCode != null">
+				 	and school_code=#{schoolCode}
+				</when>
+				<when test="regionCode != null">
+					and school_code like CONCAT('%',#{regionCode},'%')
+				</when>
+		</choose>
+	</select>
+	
+	<!-- 远程接口pc当天监控总数 -->
+	<select id="getPcCountByDay" resultType="java.lang.Integer">
+		select count(*) from pc_state where 1=1
+		<choose>
+			<when test="schoolCode != null">
+			 	and school_code=#{schoolCode}
+			</when>
+			<when test="regionCode != null">
+				and school_code like CONCAT('%',#{regionCode},'%')
+			</when>
+		</choose>
+		and date like CONCAT('%',#{day},'%')
+	</select>
+	
+	<!-- 远程接口pc当天异常总数 -->
+	<select id="getPcWarnCountByDay" resultType="java.lang.Integer">
+		select count(*) from pc_state where is_normal=0
+		<choose>
+			<when test="schoolCode != null">
+			 	and school_code=#{schoolCode}
+			</when>
+			<when test="regionCode != null">
+				and school_code like CONCAT('%',#{regionCode},'%')
+			</when>
+		</choose>
+		and date like CONCAT('%',#{day},'%')
+	</select>
+	
+</mapper>

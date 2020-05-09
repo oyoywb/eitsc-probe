@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+<title>添加绑定信息</title>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">添加绑定信息</h2>
+		<form class="layui-form" action="#" style="width: 800px;">
+			<div class="layui-form-item">
+				<label class="layui-form-label">校区编号</label>
+				<div class="layui-input-block" style="width: 500px;">
+					<select name="city" lay-verify="required" lay-filter="school" id="school"></select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">PC编号</label>
+				<div class="layui-input-block" style="width: 500px;">
+					<select name="city" lay-verify="required" lay-filter="pccode" id="pccode"></select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">IP地址</label>
+				<div class="layui-input-inline" style="width: 500px;">
+					<input type="text" name="pcIp" id="pcIp" placeholder="例:192.168.0.1" required
+						lay-verify="required|ip" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">MAC地址</label>
+				<div class="layui-input-inline" style="width: 500px;">
+					<input type="text" name="pcMac" id="pcMac" placeholder="例:00:16:EA:AE:3C:40" required
+						lay-verify="required|mac" autocomplete="off" class="layui-input" >
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-inline" style="margin: 20px 0 20px 300px;">
+					<a href="javascript:;" class="layui-btn pub" lay-submit lay-filter="publish">发布</a>
+					<a href="javascript:history.back()" class="layui-btn">取消</a>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		layui.use(['element','form','layer'],function(){
+			var element = layui.element;
+			var form = layui.form;
+			var layer = layui.layer;
+			var pub_url =baseUrl +  'bind/saveOrUpdateProbeBind';
+			form.on('select(school)',function(data){
+				
+			})
+
+			form.verify({
+				mac: function(value, item){ //value：表单的值、item：表单的DOM对象
+					var reg_name=/[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}/;
+					if(!reg_name.test(value)){
+						return 'mac地址格式不正确'
+					}
+				},
+				ip:function(value, item){
+					var reg_name=/((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/g;
+					if(!reg_name.test(value)){
+						return 'ip地址格式不正确'
+					}
+				}
+			});      
+			//学校编号
+			function getSchool(){
+				$.ajax({
+					type: 'post',
+					dataType: 'json',
+					data: {},
+					contentType: 'application/json;charset=utf-8',
+					url: baseUrl + 'bind/getSchoolCodeList',
+					success: function(ret) {
+						if(ret.list.length != 0){
+							var listHtml = '<option value="">请选择校区</option>'
+							for(var i in ret.list){
+								listHtml += '<option value="'+ret.list[i].code+'">'+ret.list[i].name+'</option>'
+							}
+							$('#school').html(listHtml)
+							form.render()
+						}else{
+							layer.msg('暂无校区数据',{icon : 2})
+						}
+							
+					},
+					error:function(){
+						layer.msg('校区数据请求失败，请检查网络连接',{icon:2});
+					}
+				})
+			}
+			//PC编号
+			function getPccode(){
+				$.ajax({
+					type: 'get',
+					dataType: 'json',
+					data: {schoolCode:schoolCode},
+					contentType: 'application/json;charset=utf-8',
+					url: baseUrl + 'bind/getPcEquipList',
+					success: function(ret) {
+						if(ret.list.length != 0){
+							var listHtml = '<option value="">请选择pc编号</option>'
+							for(var i in ret.list){
+								listHtml += '<option value="'+ret.list[i].code+'">'+ret.list[i].code+'</option>'
+							}
+							$('#pccode').html(listHtml)
+							form.render()
+						}else{
+							layer.msg('暂无pc编号数据',{icon : 2})
+						}
+							
+					},
+					error:function(){
+						layer.msg('pc编号数据请求失败，请检查网络连接',{icon:2});
+					}
+				})
+			}
+			getSchool()
+			getPccode()
+			//监听发布
+			form.on('submit(publish)', function(data){
+				data.field.schoolCode = $('#school').val();
+				data.field.pcCode = $('#pccode').val();
+				data.field.pcIp = $('#pcIp').val();
+				data.field.pcMac = $('#pcMac').val();
+				
+				var formData = JSON.stringify(data.field);
+				$.ajax({
+					type: 'post',
+					dataType: 'json',
+					data: formData,
+					contentType: 'application/json;charset=utf-8',
+					url: pub_url,
+					success: function(res) {
+						if(res.code == 1){
+							layer.msg('发布成功',{
+								icon:1,
+								time:2000,
+								end:function(){
+									window.location.href = './get_Bind.html?orgcode=' + schoolCode;
+								}
+							});
+						}else{
+							layer.msg('发布失败',{
+								icon:2,
+								time:2000,
+								end:function(){
+									window.location.href = './get_Bind.html?orgcode=' + schoolCode;
+								}
+							});
+						}							
+					},
+					error:function(){
+						layer.msg('发布失败',{icon:2});
+					}
+				})
+			})
+
+		});
+	</script>
+</body>
+</html>

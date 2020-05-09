@@ -1,0 +1,133 @@
+body {
+	background-color: #fff;
+}
+
+.layui-container {
+	background-color: #fff;
+	border-radius: 10px;
+	padding-bottom: 50px;
+
+}
+
+/*删除按钮*/
+.red-bg {
+	background-color: #f14d4c !important;
+}
+
+/*查看按钮*/
+.blue-bg {
+	background-color: #3c9bd3 !important;
+}
+
+/*选择文件、发布版本按钮*/
+.select,
+.pub {
+	background-color: #5fb878 !important;
+}
+
+/*修改、搜索、导出、导入、发布、预览、重选、返回、添加、提交按钮*/
+#edit,
+#search,
+#export,
+#import,
+#pub,
+#confirm,
+#reelect,
+#preview,
+#back,
+#add,
+#submit {
+	background-color: #5fb878 !important;
+}
+
+.pages,
+.down_pages,
+.pub_pages,
+.website_pages,
+.software_pages {
+	text-align: center;
+}
+
+/* layui 时间选择器 不要秒的选项 */
+.layui-laydate-content>.layui-laydate-list {
+	padding-bottom: 0px;
+	overflow: hidden;
+}
+
+.layui-laydate-content>.layui-laydate-list>li {
+	width: 50%
+}
+
+.merge-box .scrollbox .merge-list {
+	padding-bottom: 5px;
+}
+
+/*  wu  */
+
+.table {
+	width: 100%;
+	text-align: center;
+}
+
+.trr>td {
+	border: 1px solid #d2d2d2;
+}
+
+#window {
+	padding: 20px;
+}
+.select-classroom .swiper-box{
+	border-bottom: 1px solid #efefef;
+	width: 700px;
+	height: 40px;
+}
+.select-classroom .head-tap-wrap .s-item{
+	text-align: center;
+    height: 40px;
+    line-height: 40px;
+    border-right: 1px solid #efefef;
+    margin-right: -1px;
+    cursor: pointer;
+    box-sizing: border-box;
+    padding: 0 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+} 
+.select-classroom .head-tap-wrap .s-item.act{
+	background: #5fb878;
+    color: #fff;
+}
+.select-classroom .render-centent{
+	padding: 10px;
+}
+.select-classroom .render-centent .input-item-list{
+	overflow: hidden;
+	overflow-y: auto;
+	height: 200px;
+}
+.select-classroom .render-centent .input-item-list  .input-item{
+	width: 20%;
+	float: left;
+	margin-bottom: 10px;
+}
+.select-classroom .allchecked {
+	margin-bottom: 20px;
+	overflow: hidden;
+	border-bottom: 1px solid #efefef;
+}
+.select-classroom .allchecked .input-item{
+	
+	padding-bottom: 10px;
+}
+.select-classroom .input-item-list .layui-form-checkbox span {
+	text-overflow: ellipsis;
+	max-width: 100px;
+}
+.layui-btn{
+	background-color: #5fb878 !important;
+}
+.select-classroom .btn{
+	text-align: center;
+	margin: 20px 0 10px 0;
+}

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>导入excel文件</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+<script type="text/javascript">
+	layui.config({
+		base: 'layui_exts/'
+	}).extend({
+		excel: 'excel'
+	});
+</script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">导入excel文件</h2>
+		<form class="layui-form" action="#" style="width: 1000px;">
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">导入:</label>
+					<div class="layui-input-block">
+						<input type="text" name="filename" id="filename"
+							lay-verify="required" autocomplete="off" class="layui-input"
+							value="">
+					</div>
+				</div>
+				<div class="layui-inline">
+					<button class="layui-btn select" id="upload_file">选择文件</button>
+				</div>
+				<div class="layui-inline">
+					<button class="layui-btn" id="confirm">确定导入</button>
+					<button class="layui-btn" id="model" onclick="Download()" style="background-color: #5fb878;"><a href="./files/model.xls" style="color: #fff;">下载模版</a></button>
+					
+				</div>
+				<!--
+				<div class="layui-inline">
+					<button class="layui-btn" id="reelect">重新选择</button>
+				</div>
+
+			
+					<button class="layui-btn" id="preview">预览</button>
+				-->
+			</div>
+		</form>
+
+		<div id="preview_excel" style="margin-bottom: 20px;"></div>
+		<div id="LAY-excel-demo-list-dom"></div>
+	</div>
+
+	<!--模板标签-->
+	<script type="text/html" id="import_Tpl">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th><div style="text-align: center;">校区编号</div></th>
+					<th><div style="text-align: center;">PC编号</div></th>
+					<th><div style="text-align: center;">IP地址</div></th>
+					<th><div style="text-align: center;">MAC地址</div></th>
+				</tr> 
+			</thead>
+			<tbody>
+				{{#  layui.each(d.list, function(index, item){ }}
+				<tr>
+					<td><div style="text-align: center;">{{item.school_id}}</div></td>
+					<td><div style="text-align: center;">{{item.pc_id}}</div></td>
+					<td><div style="text-align: center;">{{item.pc_ip}}</div></td>
+					<td><div style="text-align: center;">{{item.pc_mac}}</div></td>
+				</tr>
+				{{#  }); }}
+			</tbody>
+		</table>
+
+		{{#  if(d.list==0){ }}
+		<div style="text-align: center;margin: 20px 0;">暂无数据</div>
+		{{#  } }} 
+	</script>
+	<script src="./js/xlsx.full.min.js"></script>
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script type="text/html" id="LAY-excel-export-ans">
+		{{# layui.each(d.data, function(file_index, item){ }}
+			<blockquote class="layui-elem-quote">{{d.files[file_index].name}}</blockquote>
+			<div class="layui-tab">
+			  <ul class="layui-tab-title">
+				  {{# layui.each(item, function(sheet_name, content) { }}
+					<li>{{sheet_name}}</li>
+				  {{# }); }}
+			  </ul>
+			  <div class="layui-tab-content">
+				  {{# layui.each(item, function(sheet_name, content) { }}
+					<div class="layui-tab-item">
+							<table class="layui-table">
+								{{# layui.each(content, function(row_index, value) { }}
+					{{# var col_index = 0 }}
+									<tr>
+										{{# layui.each(value, function(col_key, val) { }}
+										<td id="table-export-{{file_index}}-{{sheet_name}}-{{row_index}}-{{col_index++}}">{{val}}</td>
+										{{# });}}
+									</tr>
+								{{# });}}
+							</table>
+							<!-- <pre class="layui-code">{{JSON.stringify(content, null, 2)}}</pre> -->
+						</div>
+				  {{# }); }}
+			  </div>
+			</div>
+		{{# }) }}
+	</script>
+	<script type="text/html" id="LAY-excel-demo-list">
+		<table class="layui-table">
+		{{# layui.each(d.data, function(file_index, item){ }}
+			<thead>
+			<tr>
+				{{# layui.each(item, function(sheet_name, content) { }}
+				<td>校区编号</td>
+				{{# }); }}
+			</tr>
+			</thead>
+			<tbody>
+		  {{# layui.each(d.list, function(index, value) { }}
+			<tr>
+				<td>{{value.schollCode}}</td>
+				<td>{{value.pcCode}}</td>
+				<td>{{value.ipAddress}})</td>
+				<td>{{value.macAddress}}</td>
+			</tr>
+			{{# });}}
+			</tbody>
+		{{# }) }}
+		</table>
+		</script>
+	<script>
+		layui.use(['element','form','upload','layer','laytpl','excel','code'],function(){
+			var element = layui.element;
+			var form = layui.form;
+			var upload = layui.upload;
+			var layer = layui.layer;
+			var laytpl = layui.laytpl;
+			var excel = layui.excel;
+			var schhool = ''
+			var uploadUrl = baseUrl + 'bind/importProbeBind';	
+			var url = window.location.href
+			var index = layer.load(1);
+			window.setTimeout(function(){
+				layer.close(index);
+			},2000)
+			console.log(url.split('orgcode='))
+			schhool = url.split('orgcode=')[1] 	
+			//renderDemoList()
+			// var uploadInst = upload.render({
+			// 	elem: '#upload_file' //绑定元素
+			// 	,url: uploadUrl //上传接口
+			// 	,accept : 'file'
+			// 	,exts: 'xls|xlsx'
+			// 	,done: function(res){
+			// 	//上传完毕回调
+			// 	}
+			// 	,error: function(){
+			// 	//请求异常回调
+			// 	}
+			// });
+			// 确定导入
+			var flag  = null
+			$('#confirm').click(function(){
+				 flag  = 0
+				var dataList = []			
+				$('.layui-table tbody tr').each(function(index,val){					
+					var obj = {schoolCode : schhool}
+					//console.log(val)
+					if(index != 0){
+						$(this).children().each(function(index,val){
+							//console.log(val)
+							//console.log($(this).text())
+							if(index==0){
+								obj.pcCode = $(this).text()
+							}
+							if(index==1){
+								obj.pcIp = $(this).text()
+								var reg_name=/((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/g;
+								if(!reg_name.test(obj.pcIp)){
+									layer.msg('ip地址格式不正确')
+									flag =1
+									return false
+								}
+							}
+							if(index==2){
+								obj.pcMac = $(this).text()
+								var reg_name=/[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}:[A-F\d]{2}/;
+								if(!reg_name.test(obj.pcMac)){
+									layer.msg('mac地址格式不正确') 
+									flag =1
+									return false
+								}
+							}
+						})
+						
+						//console.log(obj)
+						dataList.push(obj)
+					}					
+				})
+				console.log(JSON.stringify(dataList))
+				if(flag==1){
+					return false
+				}
+				//ajax请求
+				$.ajax({
+					type:'get',
+					dataType:'json',
+					url:uploadUrl,
+					data:{bindList:JSON.stringify(dataList)},
+					success:function (res) {
+						console.log(123)
+						layer.msg('导入成功',{
+							icon:1,
+							time:2000
+						});
+						window.setTimeout(function(){
+							window.location.href = 'get_Bind.html?orgcode='+ schhool;
+						},3000)						
+					},
+					error:function(err){
+						layer.msg('导入失败！')
+					}
+				})
+				layer.msg('导入成功',{
+							icon:1,
+							time:2000
+						});
+				window.setTimeout(function(){
+					window.location.href = 'get_Bind.html?orgcode='+ schhool;
+				},3000)
+			})
+			var uploadfile =  upload.render({
+				elem: '#upload_file' //绑定元素
+				,url: uploadUrl //上传接口
+	    		,accept: 'file'
+	    		,auto: true //选择文件后不自动上
+	    		,exts: 'xls|xlsx'  //只允许导入excel文件   		
+	    		,choose: function(obj){
+					console.log(obj)
+					var files = obj.pushFile()
+					var fileArr = Object.values(files)// 注意这里的数据需要是数组，所以需要转换一下
+					// 用完就清理掉，避免多次选中相同文件时出现问题
+					// for (var index in files) {
+					// 	if (files.hasOwnProperty(index)) {
+					// 		delete files[index]
+					// 	}
+					// }
+					uploadExcel(fileArr) // 如果只需要最新选择的文件，可以这样写： uploadExcel([files.pop()])
+	    			// obj.preview(function(index,file,result){
+					// 	console.log(file)
+					// 	console.log(result)
+	    			// 	$('#filename').attr('value',file.name);
+	    			// });
+	    		}
+	    		,done: function(res){
+					// console.log(res)
+	    			// layer.msg('导入成功',{
+	    			// 	icon:1,
+	    			// 	time:2000
+	    			// });
+	    		}
+	      });
+		  
+		  function uploadExcel(files) {
+			try {
+				excel.importExcel(files, {
+				// 可以在读取数据的同时梳理数据
+				/*fields: {
+					'id': 'A'
+					, 'username': 'B'
+					, 'experience': 'C'
+					, 'sex': 'D'
+					, 'score': 'E'
+					, 'city': 'F'
+					, 'classify': 'G'
+					, 'wealth': 'H'
+					, 'sign': 'I'
+				}*/
+				}, function (data, book) {
+					console.log(data)
+					laytpl($('#LAY-excel-export-ans').html()).render({data: data, files: files},function(html){
+						$('#preview_excel').html(html)
+					})
+					//console.log(book)
+					
+				// data: {1: {sheet1: [{id: 1, name: 2}, {...}]}}// 工作表的数据对象
+				// book: {1: {Sheets: {}, Props: {}, ....}} // 工作表的整个原生对象，https://github.com/SheetJS/js-xlsx#workbook-object
+				// 也可以全部读取出来再进行数据梳理
+		/*        data = excel.filterImportData(data, {
+					'id': 'A'
+					, 'username': 'B'
+					, 'experience': 'C'
+					, 'sex': 'D'
+					, 'score': 'E'
+					, 'city': 'F'
+					, 'classify': 'G'
+					, 'wealth': 'H'
+					, 'sign': 'I'
+				})*/
+				// 如果不需要展示直接上传，可以再次 $.ajax() 将JSON数据通过 JSON.stringify() 处理后传递到后端即可
+				/**
+				 * 2019-06-21 JeffreyWang 应群友需求，加一个单元格合并还原转换
+				 * 思路：
+				 * 1. 渲染时为每个cell加上唯一的ID，demo里边采用 table-export-文件索引-sheet名称-行索引-列索引
+				 * 2. 根据 book[文件索引].Sheets[sheet名称]['!merge'] 参数，取左上角元素设置 colspan 以及 rowspan，并删除其他元素
+				 */
+				// layer.open({
+				// 	title: '文件转换结果'
+				// 	, area: ['799px', '399px']
+				// 	, tipsMore: true
+				// 	, content: laytpl($('#LAY-excel-export-ans').html()).render({data: data, files: files})
+				// 	, success: function () {
+				// 	element.render('tab')
+				// 	layui.code({})
+				// 	// 处理合并
+				// 	for (var file_index in book) {
+				// 		if (!book.hasOwnProperty(file_index)) {
+				// 		continue
+				// 		}
+				// 		// 遍历每个Sheet
+				// 		for (var sheet_name in book[file_index].Sheets) {
+				// 		if (!book[file_index].Sheets.hasOwnProperty(sheet_name)) {
+				// 			continue
+				// 		}
+				// 		var sheetObj = book[file_index].Sheets[sheet_name]
+				// 		// 仅在有合并参数时进行操作
+				// 		if (!sheetObj['!merges']) {
+				// 			continue
+				// 		}
+				// 		// 遍历每个Sheet中每个 !merges
+				// 		for (var merge_index = 0; merge_index < sheetObj['!merges'].length; merge_index++) {
+				// 			var mergeObj = sheetObj['!merges'][merge_index]
+				// 			// 每个合并参数的 s.c 表示左上角单元格的列，s.r 表示左上角单元格的行，e.c 表示右下角单元格的列，e.r 表示右下角单元格的行，计算时注意 + 1
+				// 			$('#table-export-' + file_index + '-' + sheet_name + '-' + mergeObj.s.r + '-' + mergeObj.s.c)
+				// 			.prop('rowspan', mergeObj.e.r - mergeObj.s.r + 1)
+				// 			.prop('colspan', mergeObj.e.c - mergeObj.s.c + 1)
+				// 			for (var r = mergeObj.s.r; r <= mergeObj.e.r; r++) {
+				// 			for (var c = mergeObj.s.c; c <= mergeObj.e.c; c++) {
+				// 				// 排除左上角
+				// 				if (r === mergeObj.s.r && c === mergeObj.s.c) {
+				// 				continue
+				// 				}
+				// 				$('#table-export-' + file_index + '-' + sheet_name + '-' + r + '-' + c).remove()
+				// 			}
+				// 			}
+				// 		}
+				// 		}
+				// 	}
+				// 	}
+				// })
+				})
+			} catch (e) {
+				layer.alert(e.message)
+			}
+			}
+			//模版数据显示		  
+			function getDemoListContent(callback) {
+				layui.use(['laytpl', 'jquery'], function () {
+				var laytpl = layui.laytpl
+				var $ = layui.jquery
+			
+				var list = [
+					{
+					schollCode: '440111001201',
+					pcCode: 'BYQ-DN-001',
+					ipAddress: '192.168.3.105',
+					macAddress: '42:8C:D2:5C:F8:0B',
+					},
+					{
+					schollCode: '440111001201',
+					pcCode: 'BYQ-DN-002',
+					ipAddress: '192.168.1.73',
+					macAddress: '12:9A:8B:F5:6E:1F',
+					},
+					{
+					schollCode: '440111001201',
+					pcCode: 'BYQ-DN-001',
+					ipAddress: '192.168.3.105',
+					macAddress: '42:8C:D2:5C:F8:0B',
+					}					
+				]
+				var content = laytpl($('#LAY-excel-demo-list').html()).render({
+					list: list
+				})
+				if (typeof callback == 'function' && callback.apply) {
+					callback.apply(window, [content])
+				}
+				})
+			} 
+			/**
+			 * 页面上直接展示demo列表
+			 */
+			function renderDemoList() {
+				getDemoListContent(function (content) {
+				$('#LAY-excel-demo-list-dom').html(content)
+				})
+			}    		
+      	});
+		function Download(){
+			window.location.href = './files/model.xls'
+		}
+      </script>
+</body>
+</html>

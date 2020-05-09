@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.DailyStatisticsDao">
+	<insert id="dailyPcAnalysis">
+		insert into pc_analysis
+		(school_code,school_name,cpu_error_times,ram_error_times,disk_error_times,upload_time)
+		select school_code,school_name,count(cpu_warning!='null') as
+		cpu_error_times,count(ram_warning!='null') as
+		ram_error_times,count(space_warning!='null')as
+		disk_error_times,curdate() as upload_time from cpu_state
+		where
+		date_format(date,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d') group
+		by school_code
+	</insert>
+	<insert id="dailyWebAnalysis">
+		insert into web_analysis
+		(school_code,school_name,warning_times,shot_times,vedio_times,stop_times,upload_time)
+		select school_code,school_name,count(if(level=2,1,null))as
+		warning_times,count(if(level=3,1,null))as
+		shot_times,count(if(level=4,1,null)) as vedio_times
+		,count(if(level=5,1,null)) as shop_times,curdate()as upload_time from
+		web_state
+		where
+		date_format(date,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d') group
+		by school_code
+	</insert>
+	<insert id="dailySoftAnalysis">
+		insert into
+		soft_analysis(school_code,school_name,soft_name,soft_usetime,warning_times,shot_times,vedio_times,upload_time)
+		select school_code,school_name,soft_name,sum(use_time)as
+		soft_usetime,count(if(level=2,1,null))as
+		warning_times,count(if(level=3,1,null))as
+		shot_times,count(if(level=4,1,null)) as vedio_times ,curdate()as
+		upload_time from software_state
+		where
+		date_format(date,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d') group
+		by soft_name
+	</insert>
+	<insert id="dailyPcStateAnalysis" parameterType="int">
+		insert into
+		pc_state_analysis(online_num,usage_rate,school_code,school_name,oneday_usetime,upload_time)
+		select count(school_code) as online_num,count(school_code)/#{totalCount}
+		as usage_rate,school_code,school_name,avg(use_time)as oneday_usetime
+		,curdate()as upload_time from
+		(select
+		school_code,school_name,sum(use_time)as use_time from pc_state where
+		date_format(date,'%y-%m-%d') =date_format(curdate(),'%y-%m-%d') group
+		by pc_id) as temp group By school_code
+	</insert>
+	<select id="getDailyPcAnalysis" resultType="java.util.Map">
+		select * from
+		pc_analysis where school_code=#{school_code} and
+		date_format(upload_time,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d')
+	</select>
+	<select id="getDailyWebAnalysis" resultType="java.util.Map">
+		select * from
+		web_analysis where school_code=#{school_code} and
+		date_format(upload_time,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d')
+	</select>
+	<select id="getDailySoftAnalysis" resultType="java.util.Map">
+		select * from
+		soft_analysis where school_code=#{school_code} and
+		date_format(upload_time,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d')
+	</select>
+	<select id="getDailyPcStateAnalysis" resultType="java.util.Map">
+		select * from
+		pc_state_analysis where school_code=#{school_code} and
+		date_format(upload_time,'%y-%m-%d')=date_format(curdate(),'%y-%m-%d')
+	</select>
+	<select id="getSoftNameList" resultType="java.util.Map">
+		select DISTINCT software_name from soft_list 
+		where is_white = 1
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>黑白名单</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+</head>
+<style>
+    .layui-anim-upbit{
+        text-align: left;
+    }
+</style>
+<body>
+	<div class="layui-container">
+		<div class="layui-tab layui-tab-brief text-right"
+			lay-filter="docDemoTabBrief">
+			<div id="header"></div>
+			<h2 style="margin: 20px 0; display: block;" id="list">黑白名单</h2>
+			<ul class="layui-tab-title">
+				<li class="layui-this" id="software">软件黑白名单</li>
+				<li id="website">网站黑白名单</li>
+			</ul>
+			<div class="layui-tab-content">
+				<!--软件黑白名单选项卡对应的内容-->
+				<div class="layui-tab-item layui-show" id="softcontent">
+					<div style="text-align: right;">
+						<form class="layui-form" lay-filter="form">
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<select name="isWhite" id="software_list" lay-search >
+										<option value="">请选择监控类型</option>
+										<option value="1" selected="selected">白名单</option>
+										<option value="0">黑名单</option>
+									</select>
+								</div>
+								<div class="layui-inline">
+									<button type="button" class="layui-btn" lay-submit
+										lay-filter="searchSoftware" id="search">搜索</button>
+								</div>
+								<div class="layui-inline">
+									<button type="button" class="layui-btn addSoftware" lay-submit
+										lay-filter="add" id="add">
+										<i class="layui-icon">&#xe654;</i>添加
+									</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<!--显示数据表格-->
+					<div class="software-table" id="software-table"></div>
+					<!--分页-->
+					<div class="software_pages" id="software_pages"></div>
+				</div>
+				<!--网站黑白名单选项卡对应的内容-->
+				<div class="layui-tab-item" id="webcontent">
+					<div style="text-align: right;">
+						<form class="layui-form" lay-filter="form">
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<select name="isWhite" id="website_list" lay-search>
+										<option value="">请选择监控类型</option>
+										<option value="1" selected="selected">白名单</option>
+										<option value="0">黑名单</option>
+									</select>
+								</div>
+								<div class="layui-inline">
+									<button type="button" class="layui-btn" lay-submit
+										lay-filter="searchWebsite" id="search">搜索</button>
+								</div>
+								<div class="layui-inline">
+									<button type="button" class="layui-btn addWebsite" lay-submit
+										lay-filter="add" id="add">
+										<i class="layui-icon">&#xe654;</i>添加
+									</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<!--显示数据表格-->
+					<div class="website-table" id="website-table"></div>
+					<!--分页-->
+					<div class="website_pages" id="website_pages"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--修改软件黑白名单弹出层-->
+	<div style="display: none;" id="softwareWindow">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">软件进程名称:</label>
+				<div class="layui-input-block">
+					<input type="text" name="window_soft_name" id="window_soft_name"
+						lay-verify="required" autocomplete="off" class="layui-input"
+						value="">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">监控类型:</label>
+				<div class="layui-input-block">
+					<select name="window_soft_monitorType" id="window_soft_monitorType"
+						lay-search lay-filter="isWhite2">
+						<option value="">请选择监控类型</option>
+						<option value="1">白名单</option>
+						<option value="0">黑名单</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">监控等级:</label>
+				<div class="layui-input-block">
+					<select name="window_soft_monitorLevel " class="level2"
+						id="window_soft_monitorLevel" lay-search >
+						<option value="">请选择监控等级</option>
+						<option value="1">记录用时</option>
+						<option value="2">警报</option>
+						<option value="3">截图</option>
+						<option value="">录屏</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">警告信息:</label>
+				<div class="layui-input-block">
+					<textarea name="window_softWarning" id="window_softWarning"
+						class="layui-textarea" cols="60" rows="10"></textarea>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<!--修改网站黑白名单弹出层-->
+	<div style="display: none;" id="websiteWindow">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">网站网址:</label>
+				<div class="layui-input-block">
+					<input type="text" name="window_web_name" id="window_web_name"
+						lay-verify="required" autocomplete="off" class="layui-input"
+						value="">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">监控类型:</label>
+				<div class="layui-input-block">
+					<select name="window_web_monitorType" id="window_web_monitorType"
+						lay-search lay-filter="isWhite1">
+						<option value="">请选择监控类型</option>
+						<option value="1">白名单</option>
+						<option value="0">黑名单</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">监控等级:</label>
+				<div class="layui-input-block">
+					<select name="window_web_monitorLevel " class="level1" id="window_web_monitorLevel"
+						lay-search>
+						
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">警告信息:</label>
+				<div class="layui-input-block">
+					<textarea name="window_webWarning" id="window_webWarning"
+						class="layui-textarea" cols="60" rows="10"></textarea>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<!--标题<h2>对应的模板引擎-->
+	<script type="text/html" id="header_Tpl">
+    <h2 style="margin: 20px 0;">{{ d.title }}</h2>
+</script>
+
+	<!--软件黑白名单对应的模板引擎-->
+	<script type="text/html" id="software_Tpl">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th><div style="text-align: center;">软件进程名称</div></th>
+                <th><div style="text-align: center;">监控类型</div></th>
+                <th><div style="text-align: center;">监控等级</div></th>
+                <th><div style="text-align: center;">警告信息</div></th>
+                <th><div style="text-align: center;">操作</div></th>
+            </tr> 
+        </thead>
+        <tbody>
+            {{#  layui.each(d.list, function(index, item){ }}
+            <tr>
+                <td><div style="text-align: center;" id="software_name">{{item.softwareName}}</div></td>
+                <td><div style="text-align: center;" id="soft_is_white">{{(item.isWhite == 1)?'白名单':'黑名单'}}</div></td>
+                <td><div style="text-align: center;" id="soft_level">{{(item.level == 1)?'记录用时':(item.level == 2)?'警报':(item.level == 3)?'截图':(item.level == 4)?'录屏':'无'}}</div></td>
+                <td><div style="text-align: center;" >{{item.warning}}</div></td>
+                <td>
+                    <div style="text-align: center;">
+                        <a href="javascript:;" class="layui-btn layui-btn-sm edit blue-bg" id="{{item.id}}"><i class="layui-icon">&#xe642;</i>修改</a>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm del red-bg" id="{{item.id}}"><i class="layui-icon">&#xe640;</i>删除</a>
+                    </div>
+                </td>
+            </tr>
+            {{#  }); }}
+        </tbody>
+    </table>
+
+    {{#  if(d.list==0){ }}
+    <div style="text-align: center;margin: 20px 0">暂无数据</div>
+    {{#  } }} 
+</script>
+
+	<!--网站黑白名单对应的模板引擎-->
+	<script type="text/html" id="website_Tpl">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th><div style="text-align: center;">网站网址</div></th>
+                <th><div style="text-align: center;">监控类型</div></th>
+                <th><div style="text-align: center;">监控等级</div></th>
+                <th><div style="text-align: center;">警告信息</div></th>
+                <th><div style="text-align: center;">操作</div></th>
+            </tr> 
+        </thead>
+        <tbody>
+            {{#  layui.each(d.list, function(index, item){ }}
+            <tr>
+                <td><div style="text-align: center;" id="web_name">{{item.webName}}</div></td>
+                <td><div style="text-align: center;" id="web_is_white">{{(item.isWhite == 1)?'白名单':'黑名单'}}</div></td>
+                 <td><div style="text-align: center;" id="web_level">{{(item.level == 4)?'禁止访问':(item.level == 1)?'警报':(item.level == 2)?'截图':(item.level == 3)?'录屏':'无'}}</div></td>
+                <td><div style="text-align: center;">{{item.warning}}</div></td>
+                <td>
+                    <div style="text-align: center;">
+                        <a href="javascript:;" class="layui-btn layui-btn-sm edit blue-bg" id="{{item.id}}"><i class="layui-icon">&#xe642;</i>修改</a>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm del red-bg" id="{{item.id}}"><i class="layui-icon">&#xe640;</i>删除</a>
+                    </div>
+                </td>
+            </tr>
+            {{#  }); }}
+        </tbody>
+    </table>
+
+    {{#  if(d.list==0){ }}
+    <div style="text-align: center;margin: 20px 0">暂无数据</div>
+    {{#  } }} 
+</script>
+    <script src="./js/jquery-3.2.1.min.js"></script>
+    <script src="./js/config.js"></script>
+	<script>
+        layui.use(['element','form','table','laytpl','layer','laypage'], function(){
+            var element = layui.element;
+            var form = layui.form;
+            var table = layui.table;
+            var laytpl = layui.laytpl;
+            var layer = layui.layer;
+            var laypage = layui.laypage;
+
+            var saveOrUpdateSoftList = baseUrl + 'profile/saveOrUpdateSoftList';
+            var saveOrUpdateWebList = baseUrl + 'profile/saveOrUpdateWebList';
+            var software_url = baseUrl +'profile/getSoftList';  //软件黑白名单后台数据接口
+            var website_url = baseUrl +'profile/getWebList';  //网站黑白名单后台数据接口           
+            var delSoftListById = baseUrl +'profile/delSoftListById';
+            var getSoftListById = baseUrl + 'profile/getSoftListById';
+            var getWebListById = baseUrl + 'profile/getWebListById';
+            //点击软件黑白名单渲染模板
+            $('#software').click(function(){
+                var data = {"title":"软件黑白名单"}
+
+                var getTpl = $('#header_Tpl').html();
+                laytpl(getTpl).render(data,function(html){
+                    $('#header').html(html);
+                })
+            });
+            //点击网站黑白名单渲染模板
+            $('#website').click(function(){
+                $('#list').css("display","none");
+                var data = {"title":"网站黑白名单"}
+
+                var getTpl = $('#header_Tpl').html();
+                laytpl(getTpl).render(data,function(html){
+                    $('#header').html(html);
+                })
+            });
+            //发布成功后回到列表之后跳到相应的tab标签
+            var type = (getQueryVariable('type') == undefined)?'0':getQueryVariable('type') //1为软件2位网站
+            console.log(type)
+            if(type == 1){
+
+            }else if(type == 2){
+                $('#list').css("display","none");
+                var data = {"title":"网站黑白名单"}
+
+                var getTpl = $('#header_Tpl').html();
+                laytpl(getTpl).render(data,function(html){
+                    $('#header').html(html);
+                })
+                $('#software').removeClass('layui-this')
+                $('#website').addClass('layui-this')
+                $('#softcontent').removeClass('layui-show')
+                $('#webcontent').addClass('layui-show')
+            }
+            
+            //添加软件黑白名单
+            $('.addSoftware').click(function(){
+                window.location.href = './addSoftwareList.html?orgcode=' + schoolCode;
+            });
+            //添加网站黑白名单
+            $('.addWebsite').click(function(){
+                window.location.href = './addWebsiteList.html?orgcode=' + schoolCode;
+            });
+
+            //获取软件黑白名单后台数据并显示并分页显示
+            function ajaxSoftware(url, data, pageNum) {
+                //extend 函数用于将一个或多个对象的内容合并到目标对象
+                var softwareData = $.extend({}, data, pageNum);
+               $.ajax({
+                type: 'post',
+                url: url,
+                data: softwareData,
+                contentType: 'application/x-www-form-urlencoded',
+                dataType: 'json',
+                cache: false,
+                    //ajax请求之前
+                    beforeSend: function() {
+                        var index = layer.load(1);
+                    },
+                    //请求完成
+                    complete: function() {
+                        layer.closeAll('loading');
+                    },
+                    success: function(res) {
+                        laypage.render({ //分页
+                            elem: 'software_pages' 
+                            ,
+                            count: res.total//数据总数，从服务端得到
+                            ,   
+                            limit: softwareData.pageSize //每页条数
+                            ,
+                            layout:['prev','page','next','total','skip']
+                            ,  
+                            jump: function(obj, first) {
+                                softwareData.page = obj.curr;//当前页
+                                $.ajax({
+                                    type: 'post',
+                                    url: url,
+                                    data: softwareData,
+                                    contentType : 'application/x-www-form-urlencoded',
+                                    dataType: 'json',
+                                    cache: false,
+                                    beforeSend: function() {
+                                        var index = layer.load(1);
+                                    },
+                                    complete: function() {
+                                        layer.closeAll('loading');
+                                    },
+                                    success: function(res) {
+                                        var getsoftware_Tpl = $('#software_Tpl').html();
+                                        laytpl(getsoftware_Tpl).render(res, function(html) {
+                                            $('#software-table').html(html);
+                                        });
+                                    }
+                                })
+                            }
+                        });
+                    },
+                    error:function(){
+                        layer.msg("请求数据失败",{icon:2});
+                    }
+                })
+           }
+           
+            //pageNo是自定义的页数
+            ajaxSoftware(software_url, { page: 1, pageSize: 10 ,schoolCode:schoolCode});
+
+            //获取网站黑白名单后台数据并显示并分页显示
+            function ajaxWebsite(url, data, pageNum) {
+                //extend 函数用于将一个或多个对象的内容合并到目标对象
+                var websiteData = $.extend({}, data, pageNum);
+               
+               $.ajax({
+                type: 'post',
+                url: url,
+                data: websiteData,
+                contentType: 'application/x-www-form-urlencoded',
+                dataType: 'json',
+                cache: false,
+                    //ajax请求之前
+                    beforeSend: function() {
+                        var index = layer.load(1);
+                    },
+                    //请求完成
+                    complete: function() {
+                        layer.closeAll('loading');
+                    },
+                    success: function(res) {
+                        laypage.render({ //分页
+                            elem: 'website_pages' 
+                            ,
+                            count: res.total//数据总数，从服务端得到
+                            ,
+                            limit: websiteData.pageSize  
+                            ,
+                            layout:['prev','page','next','total','skip']
+                            ,  
+                            jump: function(obj, first) {
+                                websiteData.page = obj.curr;//当前页
+                                $.ajax({
+                                    type: 'post',
+                                    url: url,
+                                    data: websiteData,
+                                    contentType: 'application/x-www-form-urlencoded',
+                                    dataType: 'json',
+                                    cache: false,
+                                    beforeSend: function() {
+                                        var index = layer.load(1);
+                                    },
+                                    complete: function() {
+                                        layer.closeAll('loading');
+                                    },
+                                    success: function(res) {
+                                        var getwebsite_Tpl = $('#website_Tpl').html();
+                                        laytpl(getwebsite_Tpl).render(res, function(html) {
+                                            $('#website-table').html(html);
+                                        });
+                                    }
+                                })
+                            }
+                        });
+                    },
+                    error:function(){
+                        layer.msg("请求数据失败",{icon:2});
+                    }
+                })
+           }
+           
+            //pageNo是自定义的页数
+            ajaxWebsite(website_url, { page: 1, pageSize: 10,schoolCode:schoolCode });
+
+            /*搜索*/
+
+            //软件黑白名单搜索
+            form.on('submit(searchSoftware)',function(data){
+                ajaxSoftware(software_url, data.field,{ page: 1, pageSize: 10 ,schoolCode:schoolCode});
+            });
+            //网站黑白名单搜索
+            form.on('submit(searchWebsite)',function(data){
+                ajaxWebsite(website_url, data.field,{ page: 1, pageSize: 10,schoolCode:schoolCode});
+            });
+
+            /*删除*/
+            //删除软件黑白名单
+            //on() 方法在被选元素及子元素上添加一个或多个事件处理程序
+            $('.software-table').on('click','.del',function(){
+                var id = $(this).attr('id');
+                layer.confirm('确定要删除吗？',{title:'删除软件监控信息'},function(index){
+                    $.ajax({
+                        type: 'get',
+                        dataType: 'json',
+                        data: {"id":id},
+                        url: delSoftListById,
+                        success:function(res){
+                            if(res.code == 1){
+                                    layer.msg('删除成功',{
+                                    icon:1,
+                                    time:2000,
+                                    end:function(){
+                                        location.reload();
+                                    }
+                                });
+                            }else{
+                                    layer.msg('删除失败',{
+                                    icon:1,
+                                    time:2000,
+                                    end:function(){
+                                        location.reload();
+                                    }
+                                });
+                            }
+                            
+                        }
+                    })
+                });
+            });
+
+            //删除网站黑白名单
+            $('.website-table').on('click','.del',function(){
+                var id = $(this).attr('id');
+                var del_data = JSON.stringify({"id":id});
+                layer.confirm('确定要删除吗？',{title:'删除网站监控信息'},function(index){
+                    $.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        data: del_data,
+                        url: baseUrl + 'profile/delWebListById?id='+id,
+                        success:function(res){
+                            layer.msg('删除成功',{
+                                icon:1,
+                                time:2000,
+                                end:function(){
+                                    location.reload();
+                                }
+                            });
+                        }
+                    })
+                });
+            });
+
+            /*修改*/
+
+            //修改软件黑白名单
+            $('.software-table').on('click','.edit',function(){
+                var id = $(this).attr('id');
+                $.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        data: {id:id},
+                        url: getSoftListById,
+                        success:function(res){
+                            $("#window_soft_name").val(res.softwareName);
+                            $("#window_soft_monitorType").val(res.isWhite);
+                            
+                            $("#window_softWarning").html(res.warning);
+                            var html = ''
+                            if(res.isWhite==1){
+                                html = '<option value="">请选择监控等级</option>\
+                                    <option value="1">记录用时</option>\
+                                    <option value="3">截图</option>\
+                                    <option value="4">录屏</option>'
+                            }else{
+                                html = '<option value="">请选择监控等级</option>\
+                                    <option value="2">警报</option>\
+                                    <option value="3">截图</option>\
+                                    <option value="4">录屏</option>'
+                            }
+                            $('.level2').html(html)
+                            $("#window_soft_monitorLevel").val(res.level);
+                            form.render();
+                            
+                        }
+                    })
+                // //获取当前要修改的监控信息
+                // var soft_name = $(this).find('#software_name').text();
+                // var soft_type = $(this).find('#is_white').text();
+                // var soft_level = $(this).find('#soft_level').text();
+
+                // //弹窗弹出来后，回填要修改的监控信息的值
+                // $('#window_soft_name').attr("value",soft_name);
+                // $('#window_soft_monitorType').attr("value",soft_type);
+                // $('#window_soft_monitorLevel').attr("value",soft_level);
+
+                var index = layer.open({
+                    type: 1,
+                    
+                    area: ["600px","400px"],
+                    title: '修改软件黑白名单',
+                    content: $('#softwareWindow'),
+                    btn: ['确定','取消'],
+                    yes:function(index,layero){
+                        //获取弹窗里的值
+                        newSoftname = $('#window_soft_name').val();
+                        newType = $('#window_soft_monitorType').val();
+                        newLevel = $('#window_soft_monitorLevel').val();
+                        newWarning = $('#window_softWarning').val();
+                        //JSON.stringify() 方法将 JavaScript 对象转换为字符串
+                        var edit_data = JSON.stringify(
+                            {
+                                "id":id,
+                                "softwareName":newSoftname,
+                                "isWhite":newType,
+                                "level":newLevel,
+                                "warning":newWarning,
+                                "schoolCode":schoolCode
+                            }
+                            );
+                        $.ajax({
+                            type: 'post',
+                            dataType: 'json',
+                            data: edit_data,
+                            contentType: 'application/json;charset=utf-8',
+                            url: saveOrUpdateSoftList,
+                            success: function(res) {
+                                layer.msg('修改成功',{
+                                    icon:1,
+                                    time:2000,
+                                    end:function(){
+                                        window.location.href = './getList.html?orgcode=' + schoolCode+'&type=2';
+                                    }
+                                });
+                                
+                            },
+                            error:function(){
+                                layer.msg('修改失败',{icon:2});
+                            }
+                        })
+                    }
+                });
+
+            });
+            //修改网站黑白名单
+            $('.website-table').on('click','.edit',function(){
+                var id = $(this).attr('id');
+                $.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        data: {id:id},
+                        url: getWebListById,
+                        success:function(res){
+                            $("#window_web_name").val(res.webName);
+                            $("#window_web_monitorType").val(res.isWhite);
+                            
+                            $("#window_webWarning").html(res.warning);
+
+                            var html = ''
+                            if(res.isWhite==1){
+                                html = '<option value="">请选择监控等级</option>\
+                                    <option value="2">截图</option>\
+                                    <option value="3">录屏</option>'
+                            }else{
+                                html = '<option value="">请选择监控等级</option>\
+                                    <option value="1">警报</option>\
+                                    <option value="2">截图</option>\
+                                    <option value="3">录屏</option>'
+                            }
+                            $('.level1').html(html)
+                            $("#window_web_monitorLevel").val(res.level);
+                            form.render();
+                        }
+                    })
+
+                // //获取当前要修改的监控信息
+                // var web_name = $(this).find('#web_name').text();
+                // var web_type = $(this).find('#is_white').text();
+                // var web_level = $(this).find('#web_level').text();
+
+                // //弹窗弹出来后，回填要修改的监控信息的值
+                // $('#window_web_address').attr("value",web_name);
+                // $('#window_web_monitorType').attr("value",web_type);
+                // $('#window_web_monitorLevel').attr("value",web_level);
+
+                var index = layer.open({
+                    type: 1,
+                    
+                    area: ["600px","400px"],
+                    title: '修改网站黑白名单',
+                    content: $('#websiteWindow'),
+                    btn: ['确定','取消'],
+                    yes:function(index,layero){
+                        //获取弹窗里的值
+                        newWebname = $('#window_web_name').val();
+                        newType = $('#window_web_monitorType').val();
+                        newLevel = $('#window_web_monitorLevel').val();
+                        newWarning = $('#window_webWarning').val();
+                        //JSON.stringify() 方法将 JavaScript 对象转换为字符串
+                        var edit_data = JSON.stringify(
+                            {
+                                "id":id,
+                                "webName":newWebname,
+                                "isWhite":newType,
+                                "level":newLevel,
+                                "warning":newWarning,
+                                "schoolCode":schoolCode
+                            }
+                            );
+                        $.ajax({
+                            type: 'post',
+                            dataType: 'json',
+                            data: edit_data,
+                            contentType: 'application/json;charset=utf-8',
+                            url: saveOrUpdateWebList,
+                            success: function(res) {
+                                layer.msg('修改成功',{
+                                    icon:1,
+                                    time:2000,
+                                    end:function(){
+                                        window.location.href = './getList.html?orgcode=' + schoolCode+'&type=2';
+                                    }
+                                });
+                                
+                            },
+                            error:function(){
+                                layer.msg('修改失败',{icon:2});
+                            }
+                        })
+                    }
+                });
+
+            });
+            form.on('select(isWhite1)',function(data){
+				var html = ''
+				if(data.value==1){
+					html = '<option value="">请选择监控等级</option>\
+						<option value="2">截图</option>\
+						<option value="3">录屏</option>'
+				}else{
+					html = '<option value="">请选择监控等级</option>\
+						<option value="1">警报</option>\
+						<option value="2">截图</option>\
+						<option value="3">录屏</option>'
+				}
+				$('.level1').html(html)
+				form.render()
+            })
+            form.on('select(isWhite2)',function(data){
+				var html = ''
+				if(data.value==1){
+					html = '<option value="">请选择监控等级</option>\
+						<option value="1">记录用时</option>\
+						<option value="3">截图</option>\
+						<option value="4">录屏</option>'
+				}else{
+					html = '<option value="">请选择监控等级</option>\
+						<option value="2">警报</option>\
+						<option value="3">截图</option>\
+						<option value="4">录屏</option>'
+				}
+				$('.level2').html(html)
+				form.render()
+			})
+
+        });
+    </script>
+</body>
+</html>

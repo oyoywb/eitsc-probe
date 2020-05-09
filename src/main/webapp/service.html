@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>excel导出扩展分享</title>
+	<link rel="stylesheet" type="text/css" href="layui/css/layui.css">
+	<style>
+		.layui-container {
+			padding-bottom: 50px;
+		}
+	</style>
+	<script type="text/javascript" src="layui/layui.js"></script>
+	<script type="text/javascript">
+	layui.config({
+		base: 'layui_exts/'
+	}).extend({
+		excel: 'excel'
+	});
+	</script>
+	<!-- IE需要把JS放在上边，否则onclick失效 -->
+	<script src="./js/index.js"></script>
+</head>
+<body>
+<div class="layui-container">
+	<div class="layui-row">
+		<div class="layui-col-md11 layui-col-md-offset1">
+			<fieldset class="layui-elem-field layui-field-title"><legend>excel导出操作演示</legend></fieldset>
+			<div class="layui-form">
+				<div class="layui-form-item">
+					<div class="layui-form-label">导出操作</div>
+					<div class="layui-form-block">
+						<button type="button" class="layui-btn layui-btn-primary" onclick="exportDataByUser()">导出数据测试</button>
+						<button type="button" class="layui-btn layui-btn-primary" onclick="exportApiDemo('./list.json')">导出接口数据</button>
+						<button type="button" class="layui-btn layui-btn-primary" onclick="exportExtendDemo()">导出复杂表头</button>
+						<button type="button" class="layui-btn layui-btn-primary" onclick="exportStyleDemo()">批量设置样式</button>
+						<!--<button type="button" class="layui-btn layui-btn-primary" onclick="exportBorderDemo()">快速设置边框</button>-->
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-form-label">导入模板</div>
+					<div class="layui-form-block">
+						<a class="layui-btn layui-btn-primary" href="demos/test_import.xlsx">常规单元格数据</a>
+						<a class="layui-btn layui-btn-primary" href="demos/test_merge.xlsx">合并单元格数据</a>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-form-label">导入操作</div>
+					<div class="layui-form-block">
+						<input type="file" class="layui-btn layui-btn-primary" id="LAY-excel-import-excel" multiple="multiple">
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-form-label"></div>
+					<div class="layui-form-block">
+						<p class="help-block" style="color: #f00;">高级浏览器可以在本页面上直接将文件拖入</p>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-form-label">Upload模块</div>
+					<div class="layui-form-block">
+						<button type="button" class="layui-btn" id="LAY-excel-upload">
+							<i class="layui-icon">&#xe67c;</i>上传文档
+						</button>
+					</div>
+				</div>
+				<div id="LAY-excel-demo-list-dom"></div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+<script type="text/html" id="LAY-excel-export-ans">
+	{{# layui.each(d.data, function(file_index, item){ }}
+		<blockquote class="layui-elem-quote">{{d.files[file_index].name}}</blockquote>
+		<div class="layui-tab">
+		  <ul class="layui-tab-title">
+		  	{{# layui.each(item, function(sheet_name, content) { }}
+			    <li>{{sheet_name}}</li>
+		  	{{# }); }}
+		  </ul>
+		  <div class="layui-tab-content">
+		  	{{# layui.each(item, function(sheet_name, content) { }}
+			    <div class="layui-tab-item">
+						<table class="layui-table">
+							{{# layui.each(content, function(row_index, value) { }}
+                {{# var col_index = 0 }}
+								<tr>
+									{{# layui.each(value, function(col_key, val) { }}
+									<td id="table-export-{{file_index}}-{{sheet_name}}-{{row_index}}-{{col_index++}}">{{val}}</td>
+									{{# });}}
+								</tr>
+							{{# });}}
+						</table>
+						<pre class="layui-code">{{JSON.stringify(content, null, 2)}}</pre>
+					</div>
+		  	{{# }); }}
+		  </div>
+		</div>
+	{{# }) }}
+</script>
+<!--demo列表模板-->
+<script type="text/html" id="LAY-excel-demo-list">
+<table class="layui-table">
+	<thead>
+	<tr>
+		<td>样例描述</td>
+		<td>样例路径 <b style="color: #f00;">(可点击跳转)</b></td>
+		<td>贡献人</td>
+	</tr>
+	</thead>
+	<tbody>
+  {{# layui.each(d.list, function(index, value) { }}
+	<tr>
+		<td>{{value.desc}}</td>
+		<td><a href="{{value.href}}" target="_blank">{{value.path}}</a></td>
+		<td>{{value.person}}({{value.email}})</td>
+	</tr>
+	{{# });}}
+	</tbody>
+</table>
+</script>
+</html>

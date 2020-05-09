@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>PC实时监控列表</title>
+	<link rel="stylesheet" href="./layui/css/layui.css">
+	<link rel="stylesheet" href="./css/body.css">
+	<script src="./layui/layui.js"></script>
+	<script src="./js/echarts.min.js"></script>
+	<style>
+		.layui-tab-card{
+			border: 1px solid darkgray;
+			width: 820px;
+		}
+		.layui-tab-title{
+			border-bottom: 1px solid darkgray;
+			background-color: #D3D3D3;
+		}
+		#list{
+			overflow: hidden;
+		}
+		.list-item{
+			text-align: center;
+			margin-bottom: 10px;
+			font-size: 12px;
+			height: ;
+		}
+		.list-item p{
+			overflow:hidden; 
+			text-overflow:ellipsis; 
+			white-space:nowrap
+		}
+		#page{
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin:20px 0;">PC实时监控</h2>
+		<div style="padding: 20px;">
+			<form class="layui-form" action="#" method="post">
+				<!--选择教学楼-->
+				<div class="layui-form-item">
+					<div class="layui-inline" style="width: 120px;">
+						<select name="buildName" id="buildName" lay-filter="change" lay-search lay-verify="required">
+						</select>
+					</div>
+					<!--选择课室-->
+					<div class="layui-inline" style="width: 120px;">
+						<select name="className" id="className" lay-search lay-verify="required">
+						</select>
+					</div>
+					<!--选择编号-->
+					<div class="layui-inline" style="width: 120px;">
+						<select name="className" id="code" lay-filter="code" lay-search lay-verify="required">
+						</select>
+					</div>
+					<div class="layui-inline" style="width: 80px;">
+						<div class="layui-btn" id="search" style="background: #44B549;width:100%;">搜索</div>
+					</div>
+					<div class="layui-inline" style="float: right;">
+						<label class="layui-form-label">当前时间：</label>
+						<div class="layui-inline">
+							<input type="text" class="layui-input" id="time" style="border: none;background-color:#f2f2f2;" disabled="disabled" value="">
+						</div>
+					</div>
+				</div>
+			</form>						
+			<div style="background-color: #f2f2f2;margin-top: 10px; padding: 10px;border-left: 1px solid darkgray;border-right: 1px solid darkgray;border-top: 1px solid darkgray;">
+				<div class="layui-inline" style="">警报信息</div>
+			</div>
+			<div id="list" style="height: auto;min-height:500px;border:solid 1px darkgray;box-shadow: 0 1px 0px 0px #D3D3D3;padding: 10px;">
+				
+			</div>
+		</div>
+		<!-- 分页控制 -->
+		<div id="page"></div>
+	</div>
+	<script type="text/html" id="datalist">
+	{{# layui.each(d.list,function(index,item){   }}
+	<div class="layui-col-md2 list-item" onclick="showDetail({{item.buildCode}},'{{item.buildName}}',{{item.classCode}},'{{item.className}}','{{item.pcCode}}',{{item.id}})">
+		{{#if(item.isNormal == 1){    }}
+		<img src="./files/pc_open.png" alt="" style="width: 50px;height: 50px;">
+		{{#    }else{ }}
+		<img src="./files/pc_close.png" alt="" style="width: 50px;height: 50px;">
+		{{#   } }}
+		<p>{{(item.buildName== undefined)?'未设定':item.buildName}}</p>
+		<p>{{(item.className== undefined)?'未设定':item.className}}</p>
+		<p>{{item.pcCode}}</p>
+	</div>	
+	{{#  }) }}
+	{{#if(d.list.length == 0){    }}
+	<p style="text-align:center;margin-top:50px;width:100%;">暂无数据</p>
+	{{# }  }}
+	</script>
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		var thispage = PageValue('page')
+		var page = (thispage == null)?1:thispage;
+		var pageCount = 20;
+		layui.use(['element','form','layer','laytpl','laypage'],function(){
+			var element = layui.element;
+			var form    = layui.form;
+			var layer   = layui.layer;
+			var laytpl  = layui.laytpl
+			var laypage = layui.laypage
+			var build_url = baseUrl +'pcMonitoring/getBuildInfo';  //后台教学楼数据接口
+            var classroom_url = baseUrl +'pcMonitoring/getClassroomInfo'; //后台教室数据接口
+            var pcinfo_url = baseUrl +'pcMonitoring/getPcState';  //请求pc信息
+			var thisTime = '';
+			var dataList = [];
+			var pageSize = 10			
+			//获取系统实时时间
+			$(function () {
+				    setInterval(function(){
+					var date = new Date();
+
+					var year = date.getFullYear();
+					var month = date.getMonth()+1;
+					var day = date.getDate();
+					                var hours = date.getHours();
+					                var minutes = date.getMinutes();
+					                var seconds = date.getSeconds();
+					                if(hours<10){
+						                    hours = '0'+hours;
+					                }
+					                if(minutes<10){
+						                    minutes = '0'+minutes;
+					                }
+					                if(seconds<10){
+						                    seconds = '0'+seconds;
+					                }
+					                var time = year+"-"+month+"-"+day+"  "+hours+":"+minutes+":"+seconds;
+					$('#time').attr('value',time);
+				});
+
+			});
+			function getTimes(){
+				// var _d = new Date();
+				// var _s = _d.getFullYear() + '-' + (_d.getMonth() + 1) + '-' + _d.getDate();
+				// if (str) {
+				//     _s += ' ' + _d.getHours() + ':' + _d.getMinutes() + ':' + _d.getSeconds();
+				// }
+				var date=new Date();
+
+				var year=date.getFullYear();
+				var month=date.getMonth()+1;
+				var day=date.getDate();
+
+				var hour=date.getHours();
+				var minute=date.getMinutes();
+				var second=date.getSeconds();
+
+				//这样写显示时间在1~9会挤占空间；所以要在1~9的数字前补零;
+				if(month<10){
+					month = '0'+month
+				}
+				if(day<10){
+					day = '0'+day
+				}
+				if (hour<10) {
+					hour='0'+hour;
+				}
+				if (minute<10) {
+					minute='0'+minute;
+				}
+				if (second<10) {
+					second='0'+second;
+				}
+				var time=year+'-'+month+'-'+day;				
+				return time;
+			};
+			//获取后台教学楼数据，回填到下拉框中
+			function getBuilddata(url,data,cb){
+				return $.ajax({
+					type: 'get',
+					dataType: 'json',
+					url: url,
+					data: data,
+					success:function(res){
+						cb && cb(res);
+					}
+				});
+			}
+			getBuilddata(build_url,{schoolCode:schoolCode},function(res){
+				var html = '<option value="">请选择教学楼</option>';
+				if(res.code == 1){
+					for (x in res.list) {
+						html = html + '<option value="'+res.list[x].code+'">'+ res.list[x].name + '</option>';
+					}
+				}
+				$('#buildName').html(html);
+				form.render();
+				
+			});
+
+            //获取后台教室数据，回填到下拉框中
+            function getClassdata(url,data,cb){
+            	return $.ajax({
+            		type: 'get',
+            		dataType: 'json',
+            		url: url,
+            		data: data,
+            		success:function(res){
+            			cb && cb(res);
+            		}
+            	});
+			}
+			form.on('select(change)', function(data){
+                getClassdata(classroom_url,{schoolCode:schoolCode,buildCode:data.value},function(res){
+                    var html = '<option value="">请选择教室</option>';
+                    if(res.code == 1){
+                        for (x in res.list) {
+                            html = html + '<option value="'+res.list[x].code+'">'+ res.list[x].name + '</option>';
+                        }
+                    }
+                    $('#className').html(html);
+                    form.render();
+                })
+            });
+			//选择编号触发的事件
+			form.on('select(code)',function(data){
+				var name = $('.layui-this').text()  //获取pc编号名字
+				var code = data.value               //获取pc编号
+				// console.log(data)
+				$('.titles').text(name)
+				//根据编号获取数组下标
+				for(var i in dataList){
+					if(dataList[i].pc_code == code){
+						console.log(i)
+						//dom操作
+						if (dataList[i].is_normal==1) {
+							$('#pc_state').text('正常');
+						}else{
+							$('#pc_state').text('异常');
+						}
+					}
+				}
+				//console.log(dataList.indexOf('code'))
+			})
+				//分页控制
+				function setPage(total){
+					var _this = this
+					laypage.render({
+						elem : 'page'
+						,limit : pageCount
+						,count:total
+						,curr:location.hash.replace('#!page=', '')
+						,hash:'page'
+						,layout:['prev','page','next','count','skip']
+						,jump: function(obj, first){
+							//console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+							//console.log(obj.limit); //得到每页显示的条数
+							//console.log(page)
+							//console.log(first)
+							_this.page = obj.curr
+							if(!first){
+								getPcInfodata()
+							}    				
+						}
+					})
+				}
+            	//获取pc实时数据(今日状态、今日运行、今日警报)
+            	function getPcInfodata(dataObj){
+					var buildName = $('#buildName option:selected').text();
+					var buildCode = $('#buildName').val();
+					var className = $('#className option:selected').text();
+					var classCode = $('#className').val();
+					var pcCode    = $('#code').val();
+            		var data = $.extend(dataObj,{"buildCode":buildCode,"classCode":classCode,"schoolCode":schoolCode,"page":page,"pageSize":pageSize});
+            		return $.ajax({
+            			type: 'get',
+            			dataType: 'json',
+            			data: data,
+            			contentType: 'application/json;charset=utf-8',
+            			url: baseUrl + 'pcMonitoring/getPcStatePage',
+            			success:function(res){
+							if(page == 1){
+								setPage(res.total)
+							}else if(thispage){
+								setPage(res.total)
+							}
+							var listHtml = '<option value="">请选择电脑编号</option>'
+							//成功回调后先将值付给编号下拉框
+							//数据拼接到插件
+							var getwebMonitor_Tpl = $('#datalist').html();
+							laytpl(getwebMonitor_Tpl).render(res, function(html){
+								$('#list').html(html);
+							});
+							//电脑编号渲染到下拉列表
+							for(var i in res.list){
+								if(res.list[i].pcName != undefined){
+									listHtml += '<option value="'+res.list[i].pcCode+'">'+res.list[i].pcName+'</option>'
+								}								
+							}
+							$('#code').html(listHtml)
+							form.render()
+            			}
+            		});
+            	}
+				getPcInfodata(pcinfo_url);
+				//dom操作-搜索
+				$('#search').click(function(){
+					var pcCode = $("#code").val()
+					if(pcCode != ''){
+						getPcInfodata({"pcCode":pcCode})
+					}else{
+						getPcInfodata()
+					}
+					
+				})
+				//点击进入详情页面
+				window.showDetail = function(buildCode,buildName,classCode,className,pcCode,id){
+					//表单判断
+					if(buildCode == undefined){
+						layer.msg('此设备不能查看',{icon : 2})
+						return false
+					}else if(classCode == undefined){
+						layer.msg('此设备不能查看',{icon : 2})
+						return false
+					}else if(pcCode == undefined){
+						layer.msg('此设备不能查看',{icon : 2})
+						return false
+					}
+					var obj = {
+						buildCode : buildCode,
+						buildName : buildName,
+						classCode : classCode,
+						className : className,
+						pcCode    : pcCode,
+						id        : id
+					}
+					console.log(buildCode,buildName,classCode,className,pcCode)
+					window.location.href = 'getPCMonitoringDetail.html?buildCode='+buildCode+'&buildName='+buildName+'&classCode='+classCode+'&className='+className+'&pcCode='+pcCode+'&orgcode='+schoolCode+'&id='+id
+				}
+        });
+    </script>
+</body>
+</html>

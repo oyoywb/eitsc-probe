@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>PC绑定管理</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin-top: 20px;">PC绑定管理</h2>
+		<div class="layui-inline" style="margin-bottom: 20px; float: right;">
+			<a class="layui-btn layui-btn-sm" id="add">
+				<i class="layui-icon">&#xe654;</i>添加
+			</a>
+			<button class="layui-btn layui-btn-sm" id="import">导入</button>
+			<button class="layui-btn layui-btn-sm red-bg" id="alldelete">删除</button>
+		</div>
+		<div class="getBind-table" id="getBind-table"></div>
+		<div class="pages" id="pages"></div>
+	</div>
+
+	<!--修改PC绑定管理信息弹出层-->
+	<div style="display: none;" id="window">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">校区编号:</label>
+				<div class="layui-input-block">
+					<input type="text" name="schoolCode" id="schoolCode"
+						lay-verify="required" autocomplete="off" class="layui-input"
+						value="">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">PC编号:</label>
+				<div class="layui-input-block">
+					<input type="text" name="pcCode" id="pcCode" lay-verify="required"
+						autocomplete="off" class="layui-input" value="">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">IP地址:</label>
+				<div class="layui-input-block">
+					<input type="text" name="pcIp" id="pcIp" lay-verify="required"
+						autocomplete="off" class="layui-input" value="">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">MAC地址:</label>
+				<div class="layui-input-block">
+					<input type="text" name="pcMac" id="pcMac" lay-verify="required"
+						autocomplete="off" class="layui-input">
+				</div>
+			</div>
+		</form>
+	</div>
+	<!--模板标签-->
+	<script type="text/html" id="bind_Tpl">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th><div style="text-align: center;">校区编号</div></th>
+					<th><div style="text-align: center;">PC编号</div></th>
+					<th><div style="text-align: center;">IP地址</div></th>
+					<th><div style="text-align: center;">MAC地址</div></th>
+					<th><div style="text-align: center;">操作</div></th>
+					<!--
+					<th><div style="text-align: center;"><input type="checkbox" lay-skin="primary" lay-filter="allcheck">&nbsp;全选</div></th>
+					-->
+					<th><div style="text-align: center;">选择</div></th>
+				</tr> 
+			</thead>
+			<tbody>
+				{{#  layui.each(d.list, function(index, item){ }}
+				<tr>
+					<td><div style="text-align: center;">{{item.schoolCode}}</div></td>
+					<td><div style="text-align: center;">{{item.pcCode}}</div></td>
+					<td><div style="text-align: center;">{{item.pcIp}}</div></td>
+					<td><div style="text-align: center;">{{item.pcMac}}</div></td>
+					<td>
+						<div style="text-align: center;">
+							<a href="javascript:;" class="layui-btn layui-btn-sm blue-bg edit" id="{{item.id}}"><i class="layui-icon">&#xe642;</i>修改</a>
+						</div>
+					</td>
+					<td>
+						<input type="checkbox" lay-skin="primary" data="{{item.id}}">
+					</td>
+				</tr>
+				{{#  }); }}
+				{{#  if(d.list.total==0){ }}
+				    <div style="text-align: center;margin: 20px 0">无数据</div>
+				{{#  } }} 
+				{{#  if(d.list.total>0){ }}
+				<div style="text-align: right;">
+					<input type="checkbox" lay-skin="primary" lay-filter="allcheck">全选
+				</div>
+				{{#  } }} 
+			</tbody>
+		</table>
+
+		{{#  if(d.list==0){ }}
+		<div style="text-align: center;margin: 20px 0">暂无数据</div>
+		{{#  } }} 
+	</script>
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		layui.use(['element','table','laypage','laytpl','layer','form'],function(){
+			var element = layui.element;
+			var table = layui.table;
+			var laypage = layui.laypage;
+			var laytpl = layui.laytpl;
+			var layer = layui.layer;
+			var form = layui.form;
+
+			var bind_url = baseUrl +'bind/getProbeBind';
+			var delProbeBindById = baseUrl + 'bind/delProbeBindById/';
+			var saveOrUpdateProbeBind = baseUrl + 'bind/saveOrUpdateProbeBind';
+			var getProbeBindById = baseUrl + "bind/getProbeBindById";
+
+			$('#add').click(function(){
+				window.location.href = './add_Bind.html?orgcode=' + schoolCode;
+			});
+			$('#import').click(function(){
+				window.location.href = './import_Bind.html?filename=&file=#&orgcode=' + schoolCode;
+			});
+
+			//获取后台数据并显示并分页显示
+			function ajaxgetBind(url, data, pageNum) {
+		        //extend 函数用于将一个或多个对象的内容合并到目标对象
+		        var bindData = $.extend({}, data, pageNum);
+		       // console.log(url);
+		       $.ajax({
+		       	type: 'post',
+		       	url: url,
+		       	data: bindData,
+		       	contentType : 'application/x-www-form-urlencoded',
+		       	dataType: 'json',
+		       	cache: false,
+		            //ajax请求之前
+		            beforeSend: function() {
+		            	var index = layer.load(1);
+		            },
+		            //请求完成
+		            complete: function() {
+		            	layer.closeAll('loading');
+		            },
+		            success: function(res) {
+		                laypage.render({ //分页
+		                	elem: 'pages' 
+		                	,
+		                    count: res.total//数据总数，从服务端得到
+		                    ,   
+		                    limit: bindData.pageSize
+		                    ,
+		                    layout:['prev','page','next','total','skip']
+		                    ,  
+		                    jump: function(obj, first) {
+		                        bindData.page = obj.curr;//当前页
+		                        $.ajax({
+		                        	type: 'post',
+		                        	url: url,
+		                        	data: bindData,
+		                        	dataType: 'json',
+		                        	contentType : 'application/x-www-form-urlencoded',
+		                        	cache: false,
+		                        	beforeSend: function() {
+		                        		var index = layer.load(1);
+		                        	},
+		                        	complete: function() {
+		                        		layer.closeAll('loading');
+		                        	},
+		                        	success: function(res) {
+		                        		var getbind_Tpl = $('#bind_Tpl').html();
+		                        		laytpl(getbind_Tpl).render(res, function(html) {
+		                        			$('#getBind-table').html(html);
+		                        		});
+		                        	}
+		                        })
+		                    }
+		                });
+		            },
+		            error:function(){
+		            	layer.msg("请求数据失败",{icon:2});
+		            }
+		        })
+		   }
+		   
+		    //pageNo是自定义的页数
+		    ajaxgetBind(bind_url, { page: 1, pageSize: 10,schoolCode:schoolCode });
+
+			//删除
+			$('#alldelete').click(function(){
+				if ($('.layui-table').find('input[type=checkbox]:checked').length == 0) {
+					layer.msg('请先选择');
+					return false;
+				}
+				var idArray = [];
+				$('.layui-table').find('input[type=checkbox]:checked').each(function(index){
+					idArray.push($(this).attr('data'))
+				});
+				idArray = idArray.join(',');
+				console.log(idArray);
+
+				layer.confirm('确定要删除吗？', { title: '删除PC管理信息' }, function(index) {
+					$.ajax({
+						type: 'post',
+						dataType: 'json',
+						url: delProbeBindById+idArray,
+						success: function(res) {
+							layer.msg('删除成功',{
+								icon:1,
+								time:2000,
+								end:function(){
+									location.reload();
+								}
+							});
+						}
+					})
+				});
+
+			});
+
+			//全选
+			form.on('checkbox(allcheck)',function(data){
+				if(data.elem.checked){
+					//prop() 方法设置或返回被选元素的属性和值
+					$('.layui-table').find('input[type=checkbox]').prop('checked',true);
+					form.render('checkbox');
+				}else{
+					$('.layui-table').find('input[type=checkbox]').prop('checked',false);
+					form.render('checkbox');
+				}
+			});
+
+			//修改
+			$('.getBind-table').on('click', '.edit', function() {
+				var id = $(this).attr('id');
+				$.ajax({
+					type: 'get',
+					dataType: 'json',
+					data: {id:id},
+					contentType: 'application/json;charset=utf-8',
+					url: getProbeBindById,
+					success: function(res) {
+						$("#schoolCode").attr("value",res.schoolCode);
+						$("#pcCode").attr("value",res.pcCode);
+						$("#pcIp").attr("value",res.pcIp);
+						$("#pcMac").attr("value",res.pcMac);
+					}
+				})
+
+
+				//获取当前要修改的PC信息值
+				var schoolCode = $(this).find("#schoolCode").val();
+				var pcCode = $(this).find("#pcCode").val();
+				var pcIp = $(this).find("#pcIp").val();
+				var pcMac = $(this).find("#pcMac").val();
+				//弹窗出来后，回填要修改的PC信息原来的值
+				
+				var index = layer.open({
+					type: 1,
+					skin: 'layui-layer-molv',
+					area: ["600px","400px"],
+					title: '修改版本信息',
+					content: $("#window"),
+					btn: ['发布','取消'],
+					yes:function(index,layero){
+						newSchool_id = $("#school_id").val();
+						newPc_id = $("#pcCode").val();
+						newPc_ip = $("#pcIp").val();
+						newPc_mac = $("#pcMac").val();
+						//JSON.stringify() 方法将 JavaScript 对象转换为字符串
+						var edit_data = JSON.stringify(
+						{
+							"id": id,
+							"schoolCode": newSchool_id,
+							"pcCode": newPc_id,
+							"pcIp": newPc_ip,
+							"pcMac": newPc_mac
+						}
+						);
+						$.ajax({
+							type: 'post',
+							dataType: 'json',
+							data: edit_data,
+							contentType: 'application/json;charset=utf-8',
+							url: saveOrUpdateProbeBind,
+							success: function(res) {
+								layer.msg('修改成功',{
+									icon:1,
+									time:2000,
+									end:function(){
+										location.reload();
+									}
+								});
+							},
+							error:function(){
+								layer.msg('修改失败',{icon:2});
+							}
+						})
+					}
+				});
+				
+			});
+
+			
+		});
+	</script>
+</body>
+</html>

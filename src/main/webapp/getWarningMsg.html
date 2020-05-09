@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>基础设置</title>
+    <link rel="stylesheet" href="./layui/css/layui.css">
+    <link rel="stylesheet" href="./css/body.css">
+    <script src="./layui/layui.js"></script>
+    <style>
+        input[type=text]{
+            width: 75px;
+        }
+        .layui-form-label{
+            width: 120px;
+        }
+        .layui-form-mid{
+            margin-left: -100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-container">
+        <h2 style="margin: 20px 0;">基础设置</h2>
+        <h4 style="color: #f14d4c;">（说明：截图张数不超过3张，录屏时长不超过15秒，阀值数值输入为1-100的整数。）</h4>
+        <form class="layui-form" action="#" method="post" style="width: 800px;">
+            <button type="button" class="layui-btn" id="edit" lay-submit lay-filter="edit" style="float: right;margin:10px 0;">修改</button>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="lpsc">录屏时长：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="vedioDur" id="vedioDur" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">秒</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="jts">截图数：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="screenNum" id="screenNum" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">张</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="cpu">CPU使用率阀值：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="cpuRate" id="cpuRate" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">%</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="yxnc">运行内存阀值：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="ramLevel" id="ramLevel" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">%</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="kykj">可用空间阀值：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="diskLevel" id="diskLevel" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">%</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="jgxx">警告信息：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="warningmsg" id="warningmsg" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" id="jgsc">警告时长：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="duration" id="duration" required  lay-verify="required" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">秒</div>
+            </div>
+        </form>
+    </div>
+
+    <script src="./js/jquery-3.2.1.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script>
+        layui.use(['element','form','layer'], function(){
+            var element = layui.element;
+            var form = layui.form;
+            var layer = layui.layer;
+
+            var basesetInfo_url = baseUrl +'profile/getConfInfoBySchoolId';
+            var saveOrUpdateConfInfo = baseUrl + 'profile/saveOrUpdateConfInfo';
+            var school_id;
+        //显示基础设置信息
+        function getBasesetInfo(url,callback){
+            $.ajax({
+                type: 'get',
+                dataType: 'json',
+                data:{schoolCode:schoolCode},
+                url: url,
+                success:function(res){
+                    //把后台数据显示在表单内
+                    $('#vedioDur').attr('value',res.vedioDur);
+                    $('#screenNum').attr('value',res.screenNum);
+                    $('#cpuRate').attr('value',res.cpuRate);
+                    $('#ramLevel').attr('value',res.ramLevel);
+                    $('#diskLevel').attr('value',res.diskLevel);
+                    $('#warningmsg').attr('value',res.warningmsg)
+                    $('#duration').attr('value',res.duration)
+                    
+                    form.render();
+                    //如果存在回调函数就执行该函数
+                    callback&&callback();
+                }
+            })
+        }
+        getBasesetInfo(basesetInfo_url);
+        //监听修改
+        form.on('submit(edit)', function(data){
+            //判定表单的数据
+            var lpsc = Number($('#vedioDur').val())  //录屏时长
+            var jts = Number($('#screenNum').val())    //截图数
+            var cpu = Number($('#cpuRate').val())    //cpu使用阀值
+            var yxnc = Number($('#ramLevel').val())  //运行内存阀值
+            var kykj = Number($('#diskLevel').val())  //可用空间阀值
+            var jgxx = $('#warningmsg').val()  //警告信息
+            var jgsc = Number($('#duration').val())  //警告时长
+            if(lpsc>15){
+                layer.msg('录屏时长不能超过15秒',{icon : 2})
+                return false
+            }else if(jts>3){
+                layer.msg('截图数不能超过3张',{icon : 2})
+                return false
+            }else if(cpu<0 || cpu>100){
+                layer.msg('CPU使用阀值只能在1-100之间')
+                return false
+            }else if(yxnc<0 || yxnc>100){
+                layer.msg('运行内存阀值只能在1-100之间')
+                return false
+            }else if(kykj<0 || kykj>100){
+                layer.msg('可用空间阀值只能在1-100之间')
+                return false
+            }else{
+                data.field.vedioDur = $('#vedioDur').val();
+                data.field.screenNum = $('#screenNum').val();
+                data.field.cpuRate = $('#cpuRate').val();
+                data.field.ramLevel = $('#ramLevel').val();
+                data.field.diskLevel = $('#diskLevel').val();
+                data.field.schoolCode = schoolCode;
+                var formData = JSON.stringify(data.field);
+                $.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    data: formData,
+                    contentType: 'application/json;charset=utf-8',
+                    url: saveOrUpdateConfInfo,
+                    success: function(res) {
+                        layer.msg('修改成功',{
+                            icon:1,
+                            time:2000
+                        });
+                    },
+                    error:function(){
+                        layer.msg('修改失败',{
+                            icon:2,
+                            time:2000
+                        });
+                    }
+                })               
+            }
+        });
+        
+    });
+
+</script>
+</body>
+</html>

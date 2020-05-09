@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>银狐探针运维服务子系统</title>
+    <link rel="stylesheet" href="./layui/css/layui.css">
+    <script src="./layui/layui.js"></script>
+    <script src="./js/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/nav.css">
+    <link rel="stylesheet" type="text/css" href="./css/header.css">
+</head>
+<body style="background: #e7e8eb;">
+    <div class="header">
+        <div class="head_con">
+            <div class="title" >
+                银狐探针运维服务子系统
+            </div>
+            <ul class="nav layui-nav" style="float: right;">
+                <p>欢迎您！</p>
+                <li class="layui-nav-item">
+                    <a href="#"><img src="http://p.allimu.com/webapp/images/apn/20190429/1556530858761-1218859388.png!imuimage" class="layui-nav-img" ><span style="color: black;">admin</span></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;">资料设置</a></dd>
+                        <dd><a href="javascript:;">退出</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div id="nav" class="layui-inline">
+        <div id="flip">版本管理<i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel"><a href="./get_releaseVersion.html" target="rightbox">历史发布</a></div>
+        <div id="panel1"><a href="./get_releaseVersion.html" target="rightbox">历史下载</a></div>
+
+        <div id="flip1"><a href="./get_Bind.html" target="rightbox">探针绑定管理<i class="layui-icon" style="float: right;">&#xe61a;</i></a></div>
+        <div id="panel2"><a href="./add_Bind.html" target="rightbox">新增绑定信息</a></div>
+        <div id="panel3"><a href="./import_Bind.html" target="rightbox">导入绑定信息</a></div>
+
+        <div id="flip2" >配置文件管理<i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel6"><a href="./getWarningMsg.html" target="rightbox">基础设置</a></div>
+        <div id="panel7">黑白名单设置<i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel7_1"><a href="./getList.html" target="rightbox">软件黑白名单</a><i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel7_1_1"><a href="./addSoftwareList.html" target="rightbox">添加黑白名单</a></div>
+
+        <div id="panel7_2"><a href="./getList.html" target="rightbox">网站黑白名单</a><i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel7_2_1"><a href="./addWebsiteList.html" target="rightbox">添加黑白名单</a></div>
+
+        <div id="flip3"><a href="./setBroadcast.html" target="rightbox">文字广播</a></div>
+
+        <div id="flip4">PC管理<i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel8"><a href="./getPcInfo.html" target="rightbox">PC信息查看</a></div>
+        <div id="panel9"><a href="./getWebMonitoring.html" target="rightbox">网站监控管理</a></div>
+        <div id="panel10"><a href="./getSoftwareMonitoring.html" target="rightbox">软件监控管理</a></div>
+        <div id="panel11"><a href="./getPCMonitoring.html" target="rightbox">PC实时监控</a></div>
+
+        <div id="flip5">统计分析<i class="layui-icon" style="float: right;">&#xe61a;</i></div>
+        <div id="panel12"><a href="./getPcuseStatistics.html" target="rightbox">PC设备使用统计</a></div>
+        <div id="panel13"><a href="./getPcPerformance.html" target="rightbox">PC性能统计</a></div>
+        <div id="panel14"><a href="./getSoftwareStatistics.html" target="rightbox">软件统计</a></div>
+        <div id="panel15"><a href="./getWebsiteStatistics.html" target="rightbox">网站统计</a></div>
+    </div>
+
+    <div class="layui-body content" style="margin-top: 115px;">
+        <iframe style="width: 90%;height: 90%;" src="./get_releaseVersion.html" name="rightbox" marginwidth="0" marginheight="0" frameborder="0" scrolling="yes" id="changeTo"></iframe>
+    </div>
+
+    <script>
+       layui.use(['element'],function(){
+         var element = layui.element;
+     });
+ </script>
+ <script>
+
+        //侧边导航栏
+        $(document).ready(function(){
+            $("#flip").click(function(){
+                $("#panel").slideToggle("slow");
+                $("#panel1").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel").click(function(){
+                $("#panel_1").slideToggle("slow");
+                $("#panel_2").slideToggle("slow");
+                $("#panel_3").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#flip1").click(function(){
+                $("#panel2").slideToggle("slow");
+                $("#panel3").slideToggle("slow");
+                $("#panel4").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#flip2").click(function(){
+                $("#panel6").slideToggle("slow");
+                $("#panel7").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel7").click(function(){
+                $("#panel7_1").slideToggle("slow");
+                $("#panel7_2").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel7_1").click(function(){
+                $("#panel7_1_1").slideToggle("slow");
+                $("#panel7_1_2").slideToggle("slow");
+                $("#panel7_1_3").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel7_2").click(function(){
+                $("#panel7_2_1").slideToggle("slow");
+                $("#panel7_2_2").slideToggle("slow");
+                $("#panel7_2_3").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#flip4").click(function(){
+                $("#panel8").slideToggle("slow");
+                $("#panel9").slideToggle("slow");
+                $("#panel10").slideToggle("slow");
+                $("#panel11").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel9").click(function(){
+                $("#panel9_1").slideToggle("slow");
+                $("#panel9_2").slideToggle("slow");
+                $("#panel9_3").slideToggle("slow");
+                $("#panel9_4").slideToggle("slow");
+                $("#panel9_5").slideToggle("slow");
+                $("#panel9_6").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel10").click(function(){
+                $("#panel10_1").slideToggle("slow");
+                $("#panel10_2").slideToggle("slow");
+                $("#panel10_3").slideToggle("slow");
+                $("#panel10_4").slideToggle("slow");
+                $("#panel10_5").slideToggle("slow");
+                $("#panel10_6").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#flip5").click(function(){
+                $("#panel12").slideToggle("slow");
+                $("#panel13").slideToggle("slow");
+                $("#panel14").slideToggle("slow");
+                $("#panel15").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel12").click(function(){
+                $("#panel12_1").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel13").click(function(){
+                $("#panel13_1").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel14").click(function(){
+                $("#panel14_1").slideToggle("slow");
+            });
+        });
+        $(document).ready(function(){
+            $("#panel15").click(function(){
+                $("#panel15_1").slideToggle("slow");
+            });
+        });
+
+
+    </script>
+</body>
+</html>

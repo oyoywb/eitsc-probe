@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>PC性能统计</title>
+	<link rel="stylesheet" href="./layui/css/layui.css">
+	<link rel="stylesheet" href="./css/body.css">
+	<script src="./layui/layui.js"></script>
+	<script src="./js/echarts.min.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">PC性能统计</h2>
+		<form class="layui-form" action="#" method="post">
+			<div class="layui-inline">
+				<div class="layui-form-item">
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" id="select_time" placeholder="选择时间">
+					</div>
+				</div>
+			</div>
+			<div class="layui-inline">
+				<div class="layui-form-item">
+					<label class="layui-form-label">监控时间：</label>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" id="monitor_time" style="border: none;" disabled="disabled" value="">
+					</div>
+				</div>
+			</div>
+		</form>
+		<hr>
+		<!--日常数据-->
+		<div style="background-color: #f2f2f2;padding: 10px;width: 800px;border-left: 1px solid darkgray;border-right: 1px solid darkgray;border-top: 1px solid darkgray;">
+			<div class="layui-inline" style="margin-left: 30px;">日常数据</div>
+		</div>
+
+		<div style="width: 820px;height: 360px;border:solid 1px darkgray;">
+			<!--日均cpu使用率-->
+			<div style="border-bottom: 1px solid darkgray;height: 120px;line-height: 120px;">
+				<label class="layui-inline" style="margin-left: 93px;">日均cpu使用率</label>
+				<div class="layui-inline layui-progress layui-progress-big" id="cpu_rate" lay-showPercent="true" style="margin-left: 60px; width: 450px;">
+					<div class="layui-progress-bar layui-bg-orange cpuRate" lay-percent="0%"></div>
+				</div>
+			</div>
+			<!--日均运行内存使用率-->
+			<div style="border-bottom: 1px solid darkgray;height: 120px;line-height: 120px;">
+				<label class="layui-inline" style="margin-left: 60px;">日均运行内存使用率</label>
+				<div class="layui-inline layui-progress layui-progress-big" id="ram" lay-showPercent="true" style="margin-left: 60px; width: 450px;">
+					<div class="layui-progress-bar ramRate" lay-percent="0%"></div>
+				</div>
+			</div>
+			<!--日均可用空间百分比-->
+			<div style="height: 120px;line-height: 120px;">
+				<label class="layui-inline" style="margin-left: 60px;">日均可用空间百分比</label>
+				<div class="layui-inline layui-progress layui-progress-big" id="disk_space" lay-showPercent="true" style="margin-left: 60px; width: 450px;">
+					<div class="layui-progress-bar layui-bg-blue diskSpace" lay-percent="0%"></div>
+				</div>
+			</div>
+		</div>
+
+		<!--异常数据-->
+		<div style="width: 820px;height: 34px;border:solid 1px darkgray;background-color: #f2f2f2;margin-top: 10px;">
+			<p class="layui-inline" style="line-height: 34px;margin-left: 40px;">异常数据</p>
+			<a href="#" id="check_detail" class="layui-inline" style="line-height: 34px;float: right;margin-right: 40px;color: #0072E3;cursor:pointer;">查看详情</a>
+		</div>
+		<div style="width: 820px;border-left:solid 1px darkgray;border-bottom:solid 1px darkgray;border-right:solid 1px darkgray;">
+			<div id="abnormal_data" style="height: 360px;"></div>
+		</div>
+	</div>
+
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+	var myChart = echarts.init(document.getElementById('abnormal_data'));
+	myChart.setOption({
+	    tooltip: {
+			 trigger: 'axis',
+			 axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+			     type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+			  }
+		},
+		legend: {
+			data: ['CPU警报','运行内存警报','可用空间警报']
+		},
+		calculable: true,
+		xAxis: [
+			 {
+			  type: 'category',
+			  // data: test
+			   data: ['CPU警报','运行内存警报','可用空间警报'], 
+			   axisLabel : {//坐标轴刻度标签的相关设置。
+			         interval:0}
+			    }
+		],
+		yAxis: [
+			{
+			    type: 'value',
+				name: "单位/次数",
+				minInterval:1,
+			 }
+		],
+		series: [
+			 {
+			    name: '次数',
+			    type: 'bar',
+			    barWidth: 10,
+			    data: [],
+			    itemStyle:{
+			    normal:{
+			        color:'#e3c887'
+			     }
+			    }
+			  }
+		]
+});
+
+	</script>
+	<script>
+		layui.use(['element','form','laydate'],function(){
+			var element = layui.element;
+			console.log(element);
+			var form = layui.form;
+			var laydate = layui.laydate;
+			
+			var pcinfo_url = baseUrl +'pcStatistics/getPcPerfStatistics';
+			$('#monitor_time').attr('value',getTimes())
+			getChart()
+			function getChart(){
+				var warning = [];//警报类别
+			    var nums = []; //警报类别对应的警报次数
+				var chart_data = {"date":getTimes(),schoolCode:schoolCode};
+			    $.ajax({
+			    	type: 'post',
+			    	async: true,//异步请求
+			    	url: pcinfo_url,
+			    	data:chart_data,
+			    	contentType : 'application/x-www-form-urlencoded',
+			    	dataType: 'json',
+			    	success:function(res){
+						if(!res.basicInfo){
+							var cpu_rate = 0;
+							var ram = 0;
+							var disk_space = 0;
+						}else{
+							var cpu_rate = res.basicInfo.cpu_rate;
+							var ram = res.basicInfo.ram_rate;
+							var disk_space = res.basicInfo.disk_space;
+						}
+			    	
+						$(".cpuRate").attr("lay-percent",parseInt(cpu_rate)+"%");		 
+						$(".ramRate").attr("lay-percent",parseInt(ram)+"%");
+						$(".diskSpace").attr("lay-percent",parseInt(disk_space)+"%");
+						element.init();
+			    		if(res){
+	                         	nums.push(res.abnormalCount.cpu_count);
+			    				nums.push(res.abnormalCount.ram_count);
+			    				nums.push(res.abnormalCount.space_count);
+			    		
+				    		myChart.hideLoading();//隐藏加载动画
+				    		myChart.setOption({
+				    			series:[{
+				    				data:nums
+				    			}]
+				    		});
+				    	}
+				    },
+				    error:function(){
+				    	layer.msg('请求图表数据失败',{icon:2});
+							myChart.hideLoading();//隐藏加载动画
+						}
+					})
+			}
+			laydate.render({
+				elem: '#select_time',
+				done:function(value){
+					$('#monitor_time').attr('value',value);
+					var date = $('#monitor_time').val();
+
+					//获取pc性能数据
+					// function getPcInfodata(url){
+					// 	var data = {"date":date,schoolCode:schoolCode};
+					// 	return $.ajax({
+					// 		type: 'get',
+					// 		dataType: 'json',
+					// 		contentType : 'application/x-www-form-urlencoded',
+					// 		url: url,
+					// 		data: data,
+					// 		success:function(res){
+								
+					// 		}
+					// 	});
+					// }
+					// getPcInfodata(pcinfo_url);
+			    myChart.showLoading();//显示加载动画
+			    var warning = [];//警报类别
+			    var nums = []; //警报类别对应的警报次数
+
+			    var chart_data = {"date":date,schoolCode:schoolCode};
+			    $.ajax({
+			    	type: 'post',
+			    	async: true,//异步请求
+			    	url: pcinfo_url,
+			    	data:chart_data,
+			    	contentType : 'application/x-www-form-urlencoded',
+			    	dataType: 'json',
+			    	success:function(res){
+						if(!res.basicInfo){
+							var cpu_rate = 0;
+							var ram = 0;
+							var disk_space = 0;
+						}else{
+							var cpu_rate = res.basicInfo.cpu_rate;
+							var ram = res.basicInfo.ram_rate;
+							var disk_space = res.basicInfo.disk_space;
+						}
+			    	
+						$(".cpuRate").attr("lay-percent",parseInt(cpu_rate)+"%");		 
+						$(".ramRate").attr("lay-percent",parseInt(ram)+"%");
+						$(".diskSpace").attr("lay-percent",parseInt(disk_space)+"%");
+						element.init();
+			    		if(res){
+	                         	nums.push(res.abnormalCount.cpu_count);
+			    				nums.push(res.abnormalCount.ram_count);
+			    				nums.push(res.abnormalCount.space_count);
+			    		
+				    		myChart.hideLoading();//隐藏加载动画
+				    		myChart.setOption({
+				    			series:[{
+				    				data:nums
+				    			}]
+				    		});
+				    	}
+				    },
+				    error:function(){
+				    	layer.msg('请求图表数据失败',{icon:2});
+							myChart.hideLoading();//隐藏加载动画
+						}
+					})
+			}
+			});
+
+			$('#check_detail').on('click',function(){
+				var date = $('#monitor_time').val();
+				window.location.href = './getPcPerformanceInfo.html?orgcode=' + schoolCode+'&date='+ date;
+			});
+			
+		});
+	</script>
+
+	
+</body>
+</html>

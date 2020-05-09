@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>软件统计</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+<script src="./js/echarts.min.js"></script>
+<script src="./js/SoftMenu.js"></script>
+</head>
+<style>
+	.null,.nulls{
+		width: 100%;
+		height: 30px;
+		line-height: 30px;
+		font-size: 30px;
+		text-align: center;
+		color: #9e9e9e;
+		position: absolute;
+		top: 45%;
+		display: none;
+	}
+</style>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">软件统计</h2>
+		<form class="layui-form" action="#" method="post" style="display: flex;justify-content: space-between;">
+			<div class="layui-inline">
+				<div class="layui-form-item">
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" id="select_time"
+							placeholder="请选择时间">
+					</div>
+				</div>
+			</div>
+			<div class="layui-inline">
+				<div class="layui-form-item">
+					<div>
+						<label class="layui-form-label">监控时间：</label>
+						<div class="layui-input-inline">
+							<input type="text" class="layui-input" id="monitor_time"
+								style="border: none;color:#3C9BD3;" disabled="disabled" value="">
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+		<div
+			style="padding: 10px;border: 1px solid darkgray;height: 34px;line-height: 34px;">
+			<div class="layui-inline" style="">白名单软件使用时长</div>
+		</div>
+		<div
+			style="border-left: solid 1px darkgray; border-bottom: solid 1px darkgray; border-right: solid 1px darkgray;position: relative;">
+			<div id="abnormal_data1" style="height: 360px;"></div>
+			<p class="null">暂无数据</p>
+		</div>
+
+		<div
+			style="height: 34px; border: solid 1px darkgray;margin-top: 10px;padding: 10px;">
+			<p class="layui-inline" style="line-height: 34px;">黑名单软件异常数据</p>
+			<a class="layui-inline" id="details" href="javascript:;"
+				style="line-height: 34px; float: right; margin-right: 40px; color: #0072E3; cursor: pointer;">警报查看详情</a>
+		</div>
+		<div
+			style="border-left: solid 1px darkgray; border-bottom: solid 1px darkgray; border-right: solid 1px darkgray;position: relative;">
+			<div id="abnormal_data" style="height: 360px;"></div>
+			<p class="nulls">暂无数据</p>
+		</div>
+	</div>
+
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script src="./js/Menu.js"></script>
+	<script>
+	
+
+	</script>
+	<script>
+		layui.use(['element','form','laydate','layer'],function(){
+			var element = layui.element;
+			var form = layui.form;
+			var laydate = layui.laydate;
+			var layer = layui.layer;
+			
+			var soft_url = baseUrl +'pcStatistics/getSoftStatistics';
+			var softUl=$(".trr");
+			$('#monitor_time').attr('value',getTimes())
+		   //图表函数
+			function getChart(id,list1,list2,yAxisName,barName){
+				var myChart = echarts.init(document.getElementById(id));
+					myChart.setOption({
+						tooltip: {
+							trigger: 'axis',
+							axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+								type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+							}
+						},
+						legend: {
+							data: list1
+						},
+						calculable: true,						
+						xAxis: [
+							{
+							type: 'category',
+							// data: test
+							data: list1, 
+							axisLabel : {//坐标轴刻度标签的相关设置。
+									interval:0}
+								}
+						],
+						yAxis: [
+							{
+								type: 'value',
+								name: yAxisName
+							}
+						],
+						series: [
+							{
+								name: barName,
+								type: 'bar',
+								barWidth: 10,
+								data: list2,
+								itemStyle:{
+								normal:{
+									color:function(params){
+										var colorList = ['#446FC4','#3B88B9','#3E5C98']
+										return colorList[params.dataIndex]
+									}
+								}
+								}
+							}
+						]
+				});
+			}			
+		    function clickEMenu(	){
+		        $softMenu=softMenu;
+		        $(".previous").click(function(){
+			                 if($softMenu.currentNum==0)return;
+			                 else{
+				                    $softMenu.currentNum-=1;
+				                    $(this).parents(".pagination").children("li:nth-last-child(2)").remove();
+				                    $(this).parent("li").after($softMenu.liList[$softMenu.currentNum])
+			                 }
+		            })                               
+		         $(".next").click(function(){
+			             if($softMenu.currentNum==$softMenu.maxNum)return;
+			              else{
+				                $softMenu.currentNum+=1;
+				                $(this).parents(".pagination").children("li:nth-child(2)").remove();
+				                $(this).parent("li").before($softMenu.liList[5+$softMenu.currentNum]);
+			             }
+			        })
+		    }
+			
+			//加载列表函数
+			function getData(date){
+				var warning = [];//警报类别
+				var nums = []; //警报类别对应的警报次数
+				var softName = []
+				var softTime = []
+			    var chart_data ={"date":date,schoolCode:schoolCode};
+			    $.ajax({
+			    	type: 'get',
+			    	async: true,//异步请求
+			    	url: soft_url,
+			    	contentType: 'application/json;charset=utf-8',
+			    	dataType: 'json',
+			    	data: chart_data,
+			    	success:function(res){
+						var $tr=$(".trr");
+						var softMenu=new SoftMenu($tr);
+						softMenu.getMenu(res.whiteSoftStatistics);
+						clickSoftSchool(softMenu);
+			    		if(res){
+							//获取黑名单统计数组
+			    			for (var i=0;i<res.softAbnormalCount.length;i++) {
+			    				warning.push(res.softAbnormalCount[i].level);
+			    				nums.push(parseInt(res.softAbnormalCount[i].count));
+							}
+							//获取白名单统计数组
+							for (var i=0;i<res.whiteSoftStatistics.length;i++) {
+			    				softName.push(res.whiteSoftStatistics[i].softName);
+			    				softTime.push((res.whiteSoftStatistics[i].useTime/3600).toFixed(1));
+							}
+							// myChart.hideLoading();//隐藏加载动画
+							getChart('abnormal_data1',softName,softTime,'H','使用时长')
+							getChart('abnormal_data',warning,nums,'单位次数','次数')
+				    		// myChart.setOption({
+				    		// 	legend: {
+				    		// 		data:warning
+				    		// 	},
+				    		// 	xAxis:{
+				    		// 		data:warning
+				    		// 	},
+				    		// 	series:[{
+				    		// 		data:nums
+				    		// 	}]
+				    		// });
+						}
+						if(res.whiteSoftStatistics.length == 0){
+							$('.null').show()
+						}else{
+							$('.null').hide()
+						}
+						if(res.softAbnormalCount.length == 0){
+							$('.nulls').show()
+						}else{
+							$('.nulls').hide()
+						}
+				    },
+				    error:function(){
+				    	layer.msg('请求图表数据失败',{icon:2});
+							// myChart.hideLoading();//隐藏加载动画
+						}
+					})
+			}
+			laydate.render({
+				elem: '#select_time',
+				done:function(value){
+					$('#monitor_time').attr('value',value);
+					var date = $('#monitor_time').val();
+					getData(date)
+					//获取pc性能数据
+		            
+					// function getSoftwareInfodata(url){
+					// 	var soft_data = JSON.stringify({"date":date,"schoolCode":schoolCode});
+					// 	return $.ajax({
+					// 		type: 'post',
+					// 		dataType: 'json',
+					// 		contentType: 'application/json;charset=utf-8',
+					// 		url: url,
+					// 		data: soft_data,
+					// 		success:function(res){
+					// 			  console.log(res);
+					// 			  var $tr=$(".trr");
+			        //               var softMenu=new SoftMenu($tr);
+			        //                 softMenu.getMenu(res.whiteSoftStatistics);
+			        //                 clickSoftSchool(softMenu);
+					// 		}
+					// 	});
+					// }
+					//getSoftwareInfodata(soft_url);
+
+					//异常数据柱状图
+					
+			    // myChart.showLoading();//显示加载动画			    
+			}
+
+		});
+
+
+		$('#details').click(function(){
+			window.location.href = './getSoftwareStatisticsInfo.html?orgcode=' + schoolCode + "&time=" + $('#monitor_time').val();
+		});
+		//运行列表函数
+		getData(getTimes())
+		});
+		 function clickSoftSchool(softMenu){
+			        $softMenu=softMenu;
+			        $(".previous").click(function(){
+			             if($softMenu.currentNum==0)return;
+			             else{
+			                $softMenu.currentNum-=1;
+			                $(this).parents(".trr").children("td:nth-last-child(2)").remove();
+			                $(this).after($softMenu.TdList[$softMenu.currentNum])
+			             }
+			        })
+			       $(".next").click(function(){
+			            if($softMenu.currentNum==$softMenu.maxNum)return;
+			            else{
+			               $softMenu.currentNum+=1;
+			               $(this).parents(".trr").children("td:nth-child(2)").remove();
+			               $(this).before($softMenu.TdList[5+$softMenu.currentNum]);
+			            }
+			       })
+			    }		
+	</script>
+
+</body>
+</html>

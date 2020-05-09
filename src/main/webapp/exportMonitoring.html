@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>批量导出监控记录</title>
+	<link rel="stylesheet" href="./layui/css/layui.css">
+	<link rel="stylesheet" href="./css/body.css">
+	<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">批量导出文件</h2>
+		<form class="layui-form" action="#">
+			<div class="layui-form-item">
+				<label class="layui-form-label">请选择时间:</label>
+				<div class="layui-inline">
+					<input type="text" name="startDate" id="startDate"  lay-verify="required" autocomplete="off" class="layui-input" value="">
+				</div>
+				<div class="layui-inline">
+					<input type="text" name="endDate" id="endDate"  lay-verify="required" autocomplete="off" class="layui-input" value="">
+				</div>
+				<div class="layui-inline">
+					<select name="buildName" id="buildName" lay-search lay-filter="school">
+						<option value="">请选择教学楼</option>
+					</select>
+				</div>
+				<!--
+				<div class="layui-inline">
+					<button type="button" class="layui-btn" id="preview" lay-submit lay-filter="search">预览</button>
+				</div>
+			-->
+				<div class="layui-inline">
+					<button type="button" class="layui-btn" id="export">导出</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<script src="./js/xlsx.full.min.js"></script>
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		layui.use(['element','form','laydate'],function(){
+			var element = layui.element;
+			var form = layui.form;
+			var laydate = layui.laydate;
+			
+			var build_url = baseUrl +'pcMonitoring/getBuildInfo';  //教学楼数据接口
+			var export_url = baseUrl +'pcMonotoring/exportWebState'; 
+			var getAllManuf = baseUrl + 'pcMonitoring/exportWebState'
+			function getdata(url, data, cb) {
+			return  $.ajax({
+					type: 'get',
+					dataType: 'json',
+					url: url,
+					data: data,
+					success: function(res) {
+						cb && cb(res)
+					}
+				})
+			}
+			//开始时间
+			laydate.render({
+				elem: '#startDate',
+				done:function(value,date,endDate){
+					//getTime()函数获取时间戳
+					var startDate = new Date(value).getTime();
+					var endDate = new Date($('#endDate').val()).getTime();
+					if (endDate < startDate) {
+						layer.msg('结束时间不能早于开始时间',{icon:2});
+						$('#startDate').val($('#endDate').val());
+					}
+				} 
+			});
+			//结束时间
+			laydate.render({
+				elem: '#endDate',
+				done:function(value,date,endDate){
+					var startDate = new Date($('#startDate').val()).getTime();
+					var endDate = new Date(value).getTime();
+					if (endDate < startDate) {
+						layer.msg('结束时间不能早于开始时间',{icon:2});
+						$('#endDate').val($('#startDate').val());
+					}
+				}
+			});
+			
+			//获取教学楼
+			function getBuilding(url,callback) {
+				
+				$.ajax({
+					type:'get',
+					dataType:'json',
+					url:url,
+					data:{schoolCode:schoolCode},
+					success:function (res) {
+						var html='<option value="">请输入教学楼名称</option>';
+						if(res.code == 1){
+							for (x in res.list) {
+								html = html + '<option value="'+res.list[x].code+'">'+ res.list[x].name + '</option>';
+							}
+						}
+						$('#buildName').html(html);
+						form.render();
+						callback&&callback();
+					}
+				})
+			}
+			getBuilding(build_url);
+
+			//导出
+			// $('#export').click(function(){
+			// 	return $.ajax({
+			// 		type: 'get',
+			// 		url: export_url,
+			// 		data: {schoolCode:schoolCode},
+			// 		success: function(res){
+			// 			layer.msg('导出成功',{icon:1});
+			// 		}
+			// 	})
+			// });
+			$('#export').click(function () {
+				var startDate = $('#startDate').val()
+				var endDate   = $('#endDate').val()
+				var buildName = $("#buildName").val()
+				if(startDate == ''){
+					layer.msg('请选择开始时间')
+					return false;
+				}else if(endDate == ''){
+					layer.msg('请选择结束时间')
+					return false;
+				}else if(buildName == ''){
+					layer.msg('请选择教学楼')
+					return false;
+				}else{
+					getdata(getAllManuf,{
+						startDate : startDate,
+						endDate   : endDate,
+						schoolCode: schoolCode,
+						buildCode : $("#buildName").val()
+					},function (res) {
+						var data = [];
+						// return false	
+						for(x in res.list){
+							var isWhite = ''
+							if(res.list[x].isWhite == 1){
+								isWhite = '白名单'
+							}else{
+								isWhite = '黑名单'
+							}
+							data.push({'教学楼名称':res.list[x].buildName,'课室名称':res.list[x].className,'PC编号':res.list[x].pcCode,'网站标题':res.list[x].title,'网站网址':res.list[x].webName,'监控类型':isWhite,'监控时间':res.list[x].date,'禁止信息':res.list[x].warning,'监控等级':res.list[x].level})
+						}
+						dataToExcel(data,'网站监控列表.xlsx')
+					})
+				}
+			})
+			var dataToExcel = function(data, filename){
+				var wopts = { bookType: 'xlsx', bookSST: false, type: 'binary' };//这里的数据是用来定义导出的格式类型
+				// const wopts = { bookType: 'csv', bookSST: false, type: 'binary' };//ods格式
+				// const wopts = { bookType: 'ods', bookSST: false, type: 'binary' };//ods格式
+				// const wopts = { bookType: 'xlsb', bookSST: false, type: 'binary' };//xlsb格式
+				// const wopts = { bookType: 'fods', bookSST: false, type: 'binary' };//fods格式
+				// const wopts = { bookType: 'biff2', bookSST: false, type: 'binary' };//xls格式
+
+				var wb = { SheetNames: ['Sheet1'], Sheets: {}, Props: {} };
+				wb.Sheets['Sheet1'] = XLSX.utils.json_to_sheet(data);
+
+				var str = XLSX.write(wb, wopts);
+				var buffer = new ArrayBuffer(str.length);
+				var view = new Uint8Array(buffer);
+				for (var i = 0; i != str.length; ++i) view[i] = str.charCodeAt(i) & 0xFF;
+
+				var e = document.createElement('a');
+				e.download = filename;
+				e.style.display = 'none';
+
+				var blob = new Blob([buffer], { type: "application/octet-stream" });
+				e.href = URL.createObjectURL(blob);
+
+				document.body.appendChild(e);
+
+				e.click();
+				document.body.removeChild(e);
+			};	
+		});
+	</script>
+</body>
+</html>

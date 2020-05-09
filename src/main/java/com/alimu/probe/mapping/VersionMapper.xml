@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.VersionDao">
+	<insert id="saveProbe" parameterType="com.alimu.probe.entity.ProbeInfo"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into probe_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="version!=null">version,</if>
+			<if test="describe!=null">`describe`,</if>
+			<if test="fileUrl!=null">file_url,</if>
+			<if test="date!=null">date,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="version!=null">#{version,jdbcType=VARCHAR},</if>
+			<if test="describe!=null">#{describe,jdbcType=VARCHAR},</if>
+			<if test="fileUrl!=null">#{fileUrl,jdbcType=VARCHAR},</if>
+			<if test="date!=null">#{date,jdbcType=TIMESTAMP},</if>
+		</trim>
+	</insert>
+	<update id="updateProbe" parameterType="com.alimu.probe.entity.ProbeInfo">
+		update probe_info
+		<set>
+			<if test="version!=null"> version=#{version},</if>
+			<if test="describe!=null"> `describe`=#{describe},</if>
+		</set>
+		where id=#{id}
+	</update>
+
+	<select id="getAllProbeInfo" resultType="com.alimu.probe.entity.ProbeInfo">
+		select * from probe_info order by id desc
+	</select>
+	<delete id="deleteProbeInfoById" parameterType="long">
+		delete from probe_info where id=#{id}
+	</delete>
+	<select id="getProbeInfoById" parameterType="long" resultType="com.alimu.probe.entity.ProbeInfo">
+		select * from probe_info where id=#{id}
+	</select>
+
+	<select id="getProbeVersion" resultType="String">
+		select version from
+		probe_info order by date desc limit 1;
+	</select>
+
+	<select id="getProbeFileUrl" resultType="String">
+		select file_url from
+		probe_info order by date desc limit 1;
+	</select>
+
+	<insert id="saveProbeDownloadInfo" useGeneratedKeys="true" keyProperty="id" parameterType="com.alimu.probe.entity.ProbeDownloadInfo">
+		insert into probe_download_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="version!=null">version,</if>
+			<if test="downDate!=null">down_date,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="version!=null">#{version,jdbcType=VARCHAR},</if>
+			<if test="downDate!=null">#{downDate,jdbcType=TIMESTAMP},</if>
+		</trim>
+
+	</insert>
+	<select id="getProbeDownloadInfo" resultType="com.alimu.probe.entity.ProbeDownloadInfo" 
+		parameterType="com.alimu.probe.entity.ProbeDownloadInfo">
+		select * from probe_download_info
+	</select>
+	<select id="getProbeDownloadInfoByFactor" resultType="com.alimu.probe.entity.ProbeDownloadInfo" 
+		parameterType="com.alimu.probe.entity.ProbeDownloadInfo">
+		select * from probe_download_info
+		<where>
+			<if test="version!=null">version=#{version}</if>
+		</where>
+	</select>
+</mapper>

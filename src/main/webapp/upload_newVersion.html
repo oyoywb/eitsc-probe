@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>发布新版本</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">发布新版本</h2>
+		<form class="layui-form" action="#" id="myForm" method="post"
+			style="width: 800px;" enctype="multipart/form-data">
+			<div class="layui-form-item" style="width: 450px;">
+				<label class="layui-form-label">探针版本号</label>
+				<div class="layui-input-block">
+					<input type="text" name="version" id="version" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-inline" style="width: 450px;">
+					<label class="layui-form-label">探针文件</label>
+					<div class="layui-input-block">
+						<input type="text" name="fileUrl" id="upload_file" autocomplete="off"
+						class="layui-input" placeholder="支持所有文件的格式" disabled>
+					</div>
+				</div>
+				<div class="layui-inline">
+					<a class="layui-btn text-right select" id="upload"
+						multiple="multiple">选择文件</a>
+					<span id="up_text" style="color: red"></span>
+				</div>
+			</div>
+			<div class="layui-form-item layui-form-text">
+				<label class="layui-form-label">发布说明</label>
+				<div class="layui-input-block">
+					<textarea name="describe" id="describe" class="layui-textarea"
+						cols="100" rows="10"></textarea>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block" style="text-align: center;">
+					<a class="layui-btn" lay-submit lay-filter="submit" id="pub">发布</a>
+					<a href="javascript:history.back()" class="layui-btn layui-btn-primary">取消</a>
+				</div>
+			</div>
+		</form>
+		<div style="margin-bottom: 20PX;"></div>
+	</div>
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		layui.use([ 'element', 'form', 'upload', 'layer' ], function() {
+			var element = layui.element;
+			var form = layui.form;
+			var upload = layui.upload;
+			var layer = layui.layer;
+
+			var uploadFile = baseUrl + 'version/uploadFile';
+			var saveOrUpdateVersion = baseUrl +'version/saveOrUpdateVersion';
+
+			//监听提交
+			form.on('submit(submit)', function(data) {
+				if(data.field.version == ''){
+					layer.msg('请天写版本号!',{icon : 2})
+					return false
+				}else if(data.field.fileUrl == ''){
+					layer.msg('请选择探针文件!',{icon : 2})
+					return false
+				}else if(data.field.describe == ''){
+					layer.msg('请填写发布说明!',{icon : 2})
+					return false
+				}else{
+					$.ajax({
+						type : 'post',
+						dataType : 'json',
+						contentType: 'application/json;charset=utf-8',
+						data : JSON.stringify(data.field),
+						url : saveOrUpdateVersion,
+						success : function(res) {
+							layer.msg('发布成功', {
+								icon : 1,
+								time:2000,
+								end:function(){
+									window.location.href = "./get_releaseVersion.html";
+								}
+							});
+						},
+						error : function() {
+							layer.msg('发布失败', {
+								icon : 2,
+								time:2000,
+								end:function(){
+									location.reload();
+								}
+							});
+						}
+					})
+				}
+				
+			});
+
+			//上传文件
+			var uploadInst = upload.render({
+				elem: '#upload' //绑定元素
+					,
+				url: uploadFile //上传接口
+					,
+				accept:'file',
+				before: function(obj) { //obj参数包含的信息，跟 choose回调完全一致，可参见上文。
+					$('#up_text').html('正在上传...')
+				},
+				done: function(res) {
+					if (res.code == 1) {
+						$('#upload_file').val(res.imgPath);
+						$('#up_text').html('上传成功！！')
+					} else {
+						$('#up_text').html('上传错误！')
+					}
+
+
+				},
+				error: function() {
+					$('#up_text').html('上传错误！')
+				}
+    });
+
+
+		});
+	</script>
+</body>
+</html>

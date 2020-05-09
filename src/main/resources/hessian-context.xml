@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+	<mvc:default-servlet-handler />
+	<!-- 不要注入id，否则会引起dao注入不了 -->
+	<bean name="/masterControlServiceImpl"
+		class="org.springframework.remoting.caucho.HessianServiceExporter">
+		<property name="service" ref="masterControlServiceImpl"></property>
+		<property name="serviceInterface"
+			value="com.alimu.probe.hessian.service.MasterControlService"></property>
+	</bean>
+	
+	<bean name="/monitoringServiceImpl"
+		class="org.springframework.remoting.caucho.HessianServiceExporter">
+		<property name="service" ref="monitoringServiceImpl"></property>
+		<property name="serviceInterface"
+			value="com.alimu.probe.hessian.service.MonitoringService"></property>
+	</bean>
+	
+	<bean name="/statisticsServiceImpl"
+		class="org.springframework.remoting.caucho.HessianServiceExporter">
+		<property name="service" ref="statisticsServiceImpl"></property>
+		<property name="serviceInterface"
+			value="com.alimu.probe.hessian.service.StatisticsService"></property>
+	</bean>
+</beans>

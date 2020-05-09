@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.PcMonitoringDao">
+	<insert id="saveWebState" parameterType="com.alimu.probe.entity.WebState">
+		insert into web_state
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="schoolName!=null">school_name,</if>
+			<if test="buildCode!=null">build_code,</if>
+			<if test="buildName!=null">build_name,</if>
+			<if test="classCode!=null">class_code,</if>
+			<if test="className!=null">class_name,</if>
+			<if test="title!=null">title,</if>
+			<if test="webName!=null">web_name,</if>
+			<if test="level!=null">level,</if>
+			<if test="date!=null">date,</if>
+			<if test="warning!=null">warning,</if>
+			<if test="ban!=null">ban,</if>
+			<if test="file!=null">file,</if>
+			<if test="isWhite!=null">is_white,</if>
+			<if test="pcCode!=null">pc_code,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="schoolName!=null">#{schoolName,jdbcType=VARCHAR},</if>
+			<if test="buildCode!=null">#{buildCode,jdbcType=BIGINT},</if>
+			<if test="buildName!=null">#{buildName,jdbcType=VARCHAR},</if>
+			<if test="classCode!=null">#{classCode,jdbcType=BIGINT},</if>
+			<if test="className!=null">#{className,jdbcType=VARCHAR},</if>
+			<if test="title!=null">#{title,jdbcType=VARCHAR},</if>
+			<if test="webName!=null">#{webName,jdbcType=VARCHAR},</if>
+			<if test="level!=null">#{level,jdbcType=TINYINT},</if>
+			<if test="date!=null">#{date,jdbcType=TIMESTAMP},</if>
+			<if test="warning!=null">#{warning,jdbcType=VARCHAR},</if>
+			<if test="ban!=null">#{ban,jdbcType=VARCHAR},</if>
+			<if test="file!=null">#{file,jdbcType=VARCHAR},</if>
+			<if test="isWhite!=null">#{isWhite,jdbcType=TINYINT},</if>
+			<if test="pcCode!=null">#{pcCode,jdbcType=VARCHAR},</if>
+		</trim>
+	</insert>
+
+	<select id="getWebState" parameterType="com.alimu.probe.entity.WebState"
+		resultType="com.alimu.probe.entity.WebState">
+		select id, pc_code,class_name,pc_code,title,web_name,is_white,date from
+		web_state
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null">and build_code=#{buildCode}</if>
+			<if test="isWhite!=null">and is_white=#{isWhite}</if>
+		</where>
+		order by id desc
+	</select>
+	<select id="getWebStateById" parameterType="long" resultType="com.alimu.probe.entity.WebState">
+		select * from web_state where id=#{id}
+	</select>
+
+	<delete id="delWebState" parameterType="long">
+		delete from web_state where id=#{id}
+	</delete>
+
+	<select id="getWebStateByFactors" resultType="com.alimu.probe.entity.WebState">
+		select * from
+		web_state where school_code=#{schoolCode} and build_code=#{buildCode}
+		and date_format(date,'%y-%m-%d') between date_format(#{startDate},'%y-%m-%d') and date_format(#{endDate},'%y-%m-%d')
+	</select>
+
+
+	<insert id="saveSoftwareState" parameterType="com.alimu.probe.entity.SoftwareState">
+		insert into software_state
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="schoolName!=null">school_name,</if>
+			<if test="buildCode!=null">build_code,</if>
+			<if test="buildName!=null">build_name,</if>
+			<if test="classCode!=null">class_code,</if>
+			<if test="className!=null">class_name,</if>
+			<if test="pcCode!=null">pc_code,</if>
+			<if test="softName!=null">soft_name,</if>
+			<if test="level!=null">level,</if>
+			<if test="date!=null">date,</if>
+			<if test="warning!=null">warning,</if>
+			<if test="useTime!=null">use_time,</if>
+			<if test="file!=null">file,</if>
+			<if test="isWhite!=null">is_white,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="schoolName!=null">#{schoolName,jdbcType=VARCHAR},</if>
+			<if test="buildCode!=null">#{buildCode,jdbcType=BIGINT},</if>
+			<if test="buildName!=null">#{buildName,jdbcType=VARCHAR},</if>
+			<if test="classCode!=null">#{classCode,jdbcType=BIGINT},</if>
+			<if test="className!=null">#{className,jdbcType=VARCHAR},</if>
+			<if test="pcCode!=null">#{pcCode,jdbcType=VARCHAR},</if>
+			<if test="softName!=null">#{softName,jdbcType=VARCHAR},</if>
+			<if test="level!=null">#{level,jdbcType=TINYINT},</if>
+			<if test="date!=null">#{date,jdbcType=TIMESTAMP},</if>
+			<if test="warning!=null">#{warning,jdbcType=VARCHAR},</if>
+			<if test="useTime!=null">#{useTime,jdbcType=INTEGER},</if>
+			<if test="file!=null">#{file,jdbcType=VARCHAR},</if>
+			<if test="isWhite!=null">#{isWhite,jdbcType=TINYINT},</if>
+		</trim>
+	</insert>
+
+	<select id="getSoftwareState" parameterType="com.alimu.probe.entity.SoftwareState"
+		resultType="com.alimu.probe.entity.SoftwareState">
+		select id,class_name,pc_code,soft_name,is_white,date from
+		software_state
+		<where>
+			<if test="id!=null">and id=#{id}</if>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null">and build_code=#{buildCode}</if>
+			<if test="isWhite!=null">and is_white=#{isWhite}</if>
+		</where>
+		order by id desc
+	</select>
+
+	<delete id="delSoftwareState" parameterType="long">
+		delete from software_state where id=#{id}
+	</delete>
+
+	<select id="getSoftwareStateById" parameterType="long" resultType="com.alimu.probe.entity.SoftwareState">
+		select
+		id,build_name,class_name,pc_code,soft_name,is_white,date,use_time,warning,file
+		from software_state where id=#{id}
+	</select>
+
+	<select id="getSoftwareStateByFactors" resultType="com.alimu.probe.entity.SoftwareState">
+		select * from
+		software_state where school_code=#{schoolCode}
+		and build_code=#{buildCode} and date_format(date,'%y-%m-%d') 
+		between date_format(#{startDate},'%y-%m-%d') and date_format(#{endDate},'%y-%m-%d')
+	</select>
+
+	<insert id="savePcState" parameterType="com.alimu.probe.entity.PcState"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into pc_state
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="buildCode!=null">build_code,</if>
+			<if test="classCode!=null">class_code,</if>
+			<if test="schoolName!=null">school_name,</if>
+			<if test="buildName!=null">build_name,</if>
+			<if test="className!=null">class_name,</if>
+			<if test="pcCode!=null">pc_code,</if>
+			<if test="pcName!=null">pc_name,</if>
+			<if test="isNormal!=null">is_normal,</if>
+			<if test="openDate!=null">open_date,</if>
+			<if test="closeDate!=null">close_date,</if>
+			<if test="useTime!=null">use_time,</if>
+			<if test="openTime!=null">open_time,</if>
+			<if test="date!=null">date,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="buildCode!=null">#{buildCode,jdbcType=BIGINT},</if>
+			<if test="classCode!=null">#{classCode,jdbcType=BIGINT},</if>
+			<if test="schoolName!=null">#{schoolName,jdbcType=VARCHAR},</if>
+			<if test="buildName!=null">#{buildName,jdbcType=VARCHAR},</if>
+			<if test="className!=null">#{className,jdbcType=VARCHAR},</if>
+			<if test="pcCode!=null">#{pcCode,jdbcType=VARCHAR},</if>
+			<if test="pcName!=null">#{pcName,jdbcType=VARCHAR},</if>
+			<if test="isNormal!=null">#{isNormal,jdbcType=TINYINT},</if>
+			<if test="openDate!=null">#{openDate,jdbcType=TIMESTAMP},</if>
+			<if test="closeDate!=null">#{closeDate,jdbcType=TIMESTAMP},</if>
+			<if test="useTime!=null">#{useTime,jdbcType=INTEGER},</if>
+			<if test="openTime!=null">#{openTime,jdbcType=INTEGER},</if>
+			<if test="date!=null">#{date,jdbcType=TIMESTAMP},</if>
+		</trim>
+	</insert>
+
+	<insert id="saveCpuState" parameterType="com.alimu.probe.entity.CpuState"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into cpu_state
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">school_code,</if>
+			<if test="buildCode!=null">build_code,</if>
+			<if test="classCode!=null">class_code,</if>
+			<if test="schoolName!=null">school_name,</if>
+			<if test="buildName!=null">build_name,</if>
+			<if test="className!=null">class_name,</if>
+			<if test="pcCode!=null">pc_code,</if>
+			<if test="pcName!=null">pc_name,</if>
+			<if test="cpuRate!=null">cpu_rate,</if>
+			<if test="ramRate!=null">ram_rate,</if>
+			<if test="diskSpace!=null">disk_space,</if>
+			<if test="cpuWarning!=null">cpu_warning,</if>
+			<if test="ramWarning!=null">ram_warning,</if>
+			<if test="spaceWarning!=null">space_warning,</if>
+			<if test="date!=null">date,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="buildCode!=null">#{buildCode,jdbcType=BIGINT},</if>
+			<if test="classCode!=null">#{classCode,jdbcType=BIGINT},</if>
+			<if test="schoolName!=null">#{schoolName,jdbcType=VARCHAR},</if>
+			<if test="buildName!=null">#{buildName,jdbcType=VARCHAR},</if>
+			<if test="className!=null">#{className,jdbcType=VARCHAR},</if>
+			<if test="pcCode!=null">#{pcCode,jdbcType=VARCHAR},</if>
+			<if test="pcName!=null">#{pcName,jdbcType=VARCHAR},</if>
+			<if test="cpuRate!=null">#{cpuRate,jdbcType=FLOAT},</if>
+			<if test="ramRate!=null">#{ramRate,jdbcType=FLOAT},</if>
+			<if test="diskSpace!=null">#{diskSpace,jdbcType=FLOAT},</if>
+			<if test="cpuWarning!=null">#{cpuWarning,jdbcType=VARCHAR},</if>
+			<if test="ramWarning!=null">#{ramWarning,jdbcType=VARCHAR},</if>
+			<if test="spaceWarning!=null">#{spaceWarning,jdbcType=VARCHAR},</if>
+			<if test="date!=null">#{date,jdbcType=TIMESTAMP},</if>
+		</trim>
+	</insert>
+
+	<select id="getPcState" parameterType="com.alimu.probe.entity.PcState"
+		resultType="java.util.Map">
+		select ps.pc_code,ps.pc_name,ps.is_normal ,ps.use_time,cs.cpu_rate,cs.ram_rate,cs.disk_space,
+		CONCAT(cs.cpu_warning,' ',cs.ram_warning,' ',cs.space_warning) as warning from pc_state ps,cpu_state cs
+		<where>
+			<if test="id!=null">and ps.id=#{id}</if>
+			<if test="schoolCode!=null">and ps.school_code=#{schoolCode} and ps.school_code=cs.school_code</if>
+			<if test="buildCode!=null">and ps.build_code=#{buildCode}</if>
+			<if test="classCode!=null">and ps.class_code=#{classCode}</if>
+			<if test="pcCode!= null">and ps.pc_code=#{pcCode} and ps.pc_code=cs.pc_code</if>
+			<if test="date!=null">and date_format(ps.date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') and date_format(cs.date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') </if>
+		</where>
+		order by cs.id desc limit 1
+	</select>
+	<select id="getErrorInfo" resultType="String">
+		select
+		CONCAT(cpu_warning,ram_warning,space_warning) as warning from
+		cpu_state
+		where pc_code=#{pcCode} and
+		date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') order by date desc LIMIT 1; 
+	</select>
+	<select id="getCpuState" parameterType="com.alimu.probe.entity.CpuState" resultType="java.util.Map">
+		select
+		cpu_rate as cpuRate,ram_rate as ramRate,disk_space as diskSpace from cpu_state where pc_code=#{pcCode}
+		and
+		date_format(date,'%y-%m-%d')=date_format(#{date},'%y-%m-%d') order by date desc LIMIT 1
+	</select>
+
+
+	<select id="getErrorLoadingWarning" resultType="java.util.Map">
+		select school_name,
+		CONCAT(cpu_warning,' ',ram_warning,' ',space_warning) as warning,date from
+		cpu_state where 1=1
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+		and CONCAT(cpu_warning,ram_warning,space_warning) is not null 
+		and CONCAT(cpu_warning,ram_warning,space_warning)!=''
+		order by date desc LIMIT 3
+	</select>
+	<select id="getSoftWarning" resultType="java.util.Map">
+		select school_name,warning,date from
+		software_state
+		where warning is not null 
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+		order by date desc LIMIT 1
+	</select>
+	<select id="getWebWarning" resultType="java.util.Map">
+		select school_name,warning,date from
+		web_state where warning is not null
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+		order by date desc LIMIT 1
+	</select>
+	<select id="getSoftFileName" resultType="java.util.Map">
+		select file from
+		software_state
+		where file is not null and file != ''
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+		order by date desc LIMIT 1
+	</select>
+	<select id="getWebFileName" resultType="java.util.Map">
+		select file from
+		web_state
+		where file is not null and file != ''
+		<choose>
+			<when test="schoolCode != null"> and school_code =#{schoolCode} </when>
+			<when test="regionCode != null"> and school_code like CONCAT('%',#{regionCode},'%') </when>
+		</choose>
+		order by date desc LIMIT 2
+	</select>
+	
+	<select id="getPcStatePage" parameterType="com.alimu.probe.entity.PcState"
+		resultType="com.alimu.probe.entity.PcState">
+		select id,school_code,school_name,build_code,build_name,class_name,class_code,pc_code,pc_name,is_normal from pc_state
+		<where>
+			<if test="id!=null">and id=#{id}</if>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="buildCode!=null">and build_code=#{buildCode}</if>
+			<if test="classCode!=null">and class_code=#{classCode}</if>
+			<if test="pcCode!=null">and pc_code=#{pcCode}</if>
+			<if test="date!=null"> and DATE_FORMAT(date,'%y-%m-%d')=DATE_FORMAT(NOW(),'%y-%m-%d')</if>
+		</where>
+		order by id desc
+	</select>
+	
+	<select id="getLastWebState" parameterType="com.alimu.probe.entity.WebState"
+		resultType="com.alimu.probe.entity.WebState">
+		select * from web_state 
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+			<if test="webName!=null">and web_name=#{webName}</if>
+			<if test="pcCode!=null">and pc_code=#{pcCode}</if>
+		</where>
+		order by id desc limit 1
+	</select>
+	
+	
+	
+	<select id="getPcStateList" resultType="com.alimu.probe.entity.PcState">
+		select * from pc_state where school_code=#{schoolCode} group by pc_code
+	</select>
+	
+	
+	<select id="getCpuStateList" resultType="com.alimu.probe.entity.CpuState">
+		select * from cpu_state where school_code=#{schoolCode} group by pc_code
+	</select>
+	
+	<select id="getWebStateList" resultType="com.alimu.probe.entity.WebState">
+		select * from web_state where school_code=#{schoolCode} group by pc_code,web_name
+	</select>
+	
+	<select id="getSoftwareStateList" resultType="com.alimu.probe.entity.SoftwareState">
+		select * from software_state where school_code=#{schoolCode} group by pc_code,soft_name
+	</select>
+	
+	<update id="updateWebState" parameterType="com.alimu.probe.entity.WebState">
+		update web_state
+		<set>
+			<if test="file!=null"> file=#{file},</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+	<update id="updateSoftwareState" parameterType="com.alimu.probe.entity.SoftwareState">
+		update software_state
+		<set>
+			<if test="file!=null"> file=#{file},</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+	<select id="getPcStateById" parameterType="long" resultType="com.alimu.probe.entity.PcState">
+		select * from pc_state where id=#{id}
+	</select>
+	
+	<select id="getSoftwareStatePage" parameterType="long" resultType="com.alimu.probe.entity.SoftwareState">
+		select * from software_state where school_code=#{schoolCode} and pc_code=#{pcCode} 
+			<choose>
+		        <when test="closeDate!=null">
+		        	and date_format(date,'%Y-%m-%d %H:%i:%s')&gt;=date_format(#{openDate},'%Y-%m-%d %H:%i:%s') 
+		            and date_format(date,'%Y-%m-%d %H:%i:%s')&lt;=date_format(#{closeDate},'%Y-%m-%d %H:%i:%s')
+		        </when>
+		        <otherwise>
+		            and date like CONCAT('%',date_format(#{openDate},'%y-%m-%d'),'%')
+		        </otherwise>
+    		</choose>
+    	group by soft_name
+	</select>
+	
+	<select id="getWebStatePage" parameterType="long" resultType="com.alimu.probe.entity.WebState">
+		select * from web_state where school_code=#{schoolCode} and pc_code=#{pcCode} 
+			<choose>
+		        <when test="closeDate!=null">
+		        	and date_format(date,'%Y-%m-%d %H:%i:%s')&gt;=date_format(#{openDate},'%Y-%m-%d %H:%i:%s') 
+		            and date_format(date,'%Y-%m-%d %H:%i:%s')&lt;=date_format(#{closeDate},'%Y-%m-%d %H:%i:%s')
+		        </when>
+		        <otherwise>
+		            and date like CONCAT('%',date_format(#{openDate},'%y-%m-%d'),'%')
+		        </otherwise>
+    		</choose>
+    	group by web_name
+	</select>
+	
+	<select id="getPcUsetimeDay" resultType="java.util.Map">
+		select open_date,close_date from pc_state 
+		where pc_code=#{pcCode} and close_date is not null 
+		and school_code=#{schoolCode} 
+		and DATE_FORMAT(date,'%y-%m-%d')=DATE_FORMAT(#{date},'%y-%m-%d')
+	</select>
+	
+</mapper>

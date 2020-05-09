@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>文字广播</title>
+    <link rel="stylesheet" href="./layui/css/layui.css">
+    <link rel="stylesheet" href="./css/body.css">
+    <link rel="stylesheet" href="./css/swiper-4.3.3.min.css">
+    <script src="./layui/layui.js"></script>
+</head>
+<style>
+    .layui-form-pane .layui-form-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<body>
+    <div class="layui-container">
+        <h2 style="margin: 20px 0;">文字广播</h2>
+        <div style="margin-bottom: 20px;">
+            <i class="layui-icon layui-icon-speaker"></i>广播信息
+        </div>
+        <form class="layui-form" action="#" method="post" style="width: 800px;">
+            <!-- <div class="layui-form-item">
+				<label class="layui-form-label" style="width: 150px;">选择教学楼：</label>
+				<div class="layui-input-inline" style="width: 250px;">
+					<div id="demo1" class="xm-select-demo layui-input-inline" style="width: 250px;"></div>
+				</div>
+			</div> -->
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 150px;">选择教室：</label>
+                <div class="layui-input-inline" style="width: 250px;">
+                    <input type="text" class="layui-input" id="classCode" readonly lay-verify="required">
+                </div>
+
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 150px;">广播开始时间：</label>
+                <div class="layui-input-inline" style="width: 250px;">
+                    <input type="text" class="layui-input" id="broadcastStarttime">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 150px;">广播结束时间：</label>
+                <div class="layui-input-inline" style="width: 250px;">
+                    <input type="text" class="layui-input" id="broadcastEndtime">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 150px;">广播速度：</label>
+                <div class="layui-input-inline" style="width: 250px;">
+                    <select name="broadcastSpeed" id="broadcastSpeed" lay-search lay-verify="required">
+                        <option value=""></option>
+                        <option value="1">快</option>
+                        <option value="2">中</option>
+                        <option value="3">慢</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 150px;">广播内容：</label>
+                <div class="layui-input-inline" style="width: 250px;">
+                    <textarea name="broadcastText" id="broadcastText" cols="100" rows="10"></textarea>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block" style="margin-left: 500px;">
+                    <input type="button" class="layui-btn" lay-submit lay-filter="submit" id="submit" value="提交">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="select-classroom" id="select-classroom" style="display: none;">
+        <div class="head-tap-wrap">
+            <div class="swiper-box">
+                <div class="swiper-wrap">
+                    <div class="swiper-container">
+                        <ul class="swiper-wrapper" id="sileList">
+
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="render-centent layui-form">
+            <div class="allchecked">
+                <div class="input-item">
+                    <input type="checkbox" title="全选" lay-skin="primary" lay-filter="allchecked">
+                </div>
+
+            </div>
+            <div class="input-item-list">
+
+
+            </div>
+            <div class="btn">
+                <a href="javascript:;" class="layui-btn btn-sure">确定</a>
+            </div>
+
+        </div>
+    </div>
+    <script src="./js/jquery-3.2.1.min.js"></script>
+    <script src="./js/xm-select.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/swiper-4.3.3.min.js"></script>
+    <script>
+        // var demo1 = xmSelect.render({
+        // 	el: '#demo1', 
+        // 	toolbar: {show: true},
+        // 	autoRow: true,
+        // 	data: []
+        // })
+        //JavaScript代码区域
+        layui.use(['element', 'form', 'laydate', 'layer'], function () {
+            var element = layui.element;
+            var form = layui.form;
+            var laydate = layui.laydate;
+            var layer = layui.layer;
+
+            var broadcast_url = baseUrl + 'profile/saveBroadcastInfo'		//后台文字广播数据接口
+            var build_url = baseUrl + 'pcMonitoring/getBuildInfo';  //后台教学楼数据接口
+            var classroom_url = baseUrl + 'pcMonitoring/getClassroomInfo'; //后台教室数据接口
+            var schoolCode = getQueryVariable('orgcode')
+            var allClass = []
+
+            $('.swiper-wrap').on('click', '.s-item', function () {
+                $('.swiper-wrap .s-item').removeClass('act')
+
+                $(this).addClass('act')
+                var buildCode = $(this).attr('code')
+                $('.allchecked input').prop('checked',false)
+                form.render()
+                getClassroom(schoolCode, buildCode)
+                // getsoftdata(data)
+            })
+            //全选
+            form.on('checkbox(allchecked)', function (data) {
+                var buildCode = $('.s-item.act').attr('code'),
+                    buildName = $('.s-item.act').text()
+                    var list = []
+                if (data.elem.checked) {
+                    $('.input-item-list').find('input').each(function(){
+                        $(this).prop('checked', true)
+                        list.push({className:$(this).attr('title'),classCode:$(this).attr('name')})
+                    })
+                        var result = allClass.some(function (item) {
+                            return item.buildCode == buildCode
+                        })
+                        if (result) {
+                            for (x in allClass) {
+                                if (allClass[x].buildCode == buildCode) {
+                                    allClass[x].list = list
+                                }
+                            }
+
+                        } else {
+                            allClass.push({
+                                buildCode: buildCode,
+                                buildName: buildName,
+                                list: list
+                            })
+                        }
+
+                    
+                } else {
+                    
+                    $('.input-item-list').find('input').prop('checked', false)
+                    for (x in allClass) {
+                        if (allClass[x].buildCode == buildCode) {
+                            allClass.splice(x,1)
+                        }
+                    }
+                }
+                console.log(allClass)
+                form.render()
+            })
+            $('.btn-sure').click(function () {
+                var list = []
+                for(x in allClass){
+                    for(y in allClass[x].list){
+                        list.push(allClass[x].list[y])
+                    }
+                }
+                var length = list.length
+                if(length==0){
+                    layer.msg('请选择教室')
+                    return false
+                }
+                $('#classCode').val('已选择'+length+'间教室')
+                layer.close(indexOp)
+            })
+            //开始时间
+            laydate.render({
+                elem: '#broadcastStarttime',
+                type: 'datetime',
+                done: function (value, date, endDate) {
+                    //getTime()函数获取时间戳
+                    var startDate = new Date(value).getTime();
+                    var endDate = new Date($('#broadcastEndtime').val()).getTime();
+                    if (endDate < startDate) {
+                        layer.msg('结束时间不能早于开始时间', { icon: 2 });
+                        $('#broadcastStarttime').val($('#broadcastEndtime').val());
+                    }
+                }
+            });
+            //结束时间
+            laydate.render({
+                elem: '#broadcastEndtime',
+                type: 'datetime',
+                done: function (value, date, endDate) {
+                    var startDate = new Date($('#broadcastStarttime').val()).getTime();
+                    var endDate = new Date(value).getTime();
+                    if (endDate < startDate) {
+                        layer.msg('结束时间不能早于开始时间', { icon: 2 });
+                        $('#broadcastEndtime').val($('#broadcastStarttime').val());
+                    }
+                }
+            });
+            //获取后台教学楼数据，回填到下拉框中
+            function getBuilddata(url, data, cb) {
+                return $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    url: url,
+                    data: data,
+                    beforeSend: function () {
+                        index1 = layer.load(2)
+                    },
+                    complete: function () {
+                        layer.close(index1)
+                    },
+                    success: function (res) {
+                        //alert(JSON.stringify(res));
+                        cb && cb(res);
+                    }
+                });
+            }
+            getBuilddata(build_url, { schoolCode: schoolCode }, function (res) {
+                var html = '';
+                var list = []
+                if (res.list.length == 0) {
+                    html = '暂无教学楼'
+                    $('#sileList').html(html)
+                    return false
+                }
+                if (res.code == 1) {
+                    for (x in res.list) {
+                        if (x == 0) {
+                            html += '<li class="swiper-slide">\
+                            <div class="s-item act" title="'+ res.list[x].name + '" code="'+ res.list[x].code + '">' + res.list[x].name + '</div>\
+                            </li>'
+                        } else {
+                            html += '<li class="swiper-slide">\
+                            <div class="s-item" title="'+ res.list[x].name + '" code="'+ res.list[x].code + '">' + res.list[x].name + '</div>\
+                            </li>'
+                        }
+
+                    }
+
+                }
+                getClassroom(schoolCode, res.list[0].code)
+                $('#sileList').html(html)
+
+                $('#classCode').click(function () {
+                    indexOp = layer.open({
+                        type: 1,
+                        title: '选择课室',
+                        area: ['700px'],
+                        resize:false,
+                        content: $('#select-classroom'),
+                        success: function () {
+                            mySwiper = new Swiper('.swiper-container', {
+                                slidesPerView: 7,
+                                centerInsufficientSlides: true,
+                            })
+                        }
+                    })
+                })
+                form.render();
+            });
+            function getClassroom(schoolCode, buildCode) {
+                getClassdata(classroom_url, { schoolCode: schoolCode, buildCode: buildCode }, function (res) {
+                    var html = '';
+                    if (res.code == 1) {
+                        for (x in res.list) {
+
+                            html += '<div class="input-item" title="' + res.list[x].name + '">\
+                                    <input type="checkbox" title="'+ res.list[x].name + '" name="' + res.list[x].code + '" lay-skin="primary" lay-filter="checked"></div>'
+
+                        }
+                    }
+                    $('.input-item-list').html(html);
+                    for (x in allClass) {
+                        if (buildCode == allClass[x].buildCode) {
+                            for (y in allClass[x].list) {
+
+                            }
+                        }
+                    }
+                    $('.input-item-list input').each(function () {
+                        for (x in allClass) {
+                            if (allClass[x].buildCode == buildCode) {
+                                for (y in allClass[x].list) {
+                                    if ($(this).attr('name') == allClass[x].list[y].classCode) {
+                                        $(this).prop('checked', true)
+                                    }
+                                }
+                            }
+                        }
+                    })
+                    // console.log(result)
+                    form.render();
+                })
+            }
+            //整理数据
+            form.on('checkbox(checked)', function (data) {
+                var buildCode = $('.s-item.act').attr('code'),
+                    buildName = $('.s-item.act').text()
+                if (data.elem.checked) {
+                    var result = allClass.some(function (item) {
+                        return item.buildCode == buildCode
+                    })
+                    if (result) {
+                        for (x in allClass) {
+                            if (allClass[x].buildCode == buildCode) {
+                                allClass[x].list.push({
+                                    classCode: data.elem.name,
+                                    className: data.elem.title
+                                })
+                            }
+                        }
+
+                    } else {
+                        allClass.push({
+                            buildCode: buildCode,
+                            buildName: buildName,
+                            list: [{
+                                classCode: data.elem.name,
+                                className: data.elem.title
+                            }]
+                        })
+                    }
+
+                } else {
+                    for (x in allClass) {
+                        if (allClass[x].buildCode == buildCode) {
+                            for (y in allClass[x].list) {
+                                if (allClass[x].list[y].classCode == data.elem.name) {
+                                    allClass[x].list.splice(y, 1)
+                                }
+
+                            }
+                        }
+                    }
+                }
+                console.log(allClass)
+            })
+            function c_data() {
+
+            }
+
+            //获取后台教室数据，回填到下拉框中
+            function getClassdata(url, data, cb) {
+                return $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    url: url,
+                    data: data,
+                    beforeSend: function () {
+                        index2 = layer.load(2)
+                    },
+                    complete: function () {
+                        layer.close(index2)
+                    },
+                    success: function (res) {
+                        cb && cb(res);
+                    }
+                });
+            }
+            //监听提交
+            form.on('submit(submit)', function (data) {
+                
+                data.field.beginTime = $('#broadcastStarttime').val();
+                data.field.endTime = $('#broadcastEndtime').val();
+                data.field.broadcastSpeed = $('#broadcastSpeed').val();
+                data.field.broadcastText = $('#broadcastText').val();
+                data.field.schoolCode = schoolCode;
+                //获取课室的数组,并将value字段改成code字段
+                data.field.buildClassCodes = JSON.stringify(allClass)
+                $.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    data: data.field,
+                    url: broadcast_url,
+                    success: function(res) {
+                        layer.msg('提交成功',{icon:1}); 
+                        window.location.href = 'setBroadcast.html?orgcode='+schoolCode
+                    },
+                    error:function(){
+                        layer.msg('提交失败',{icon:2});
+                    }
+                })
+            });
+
+        });
+
+    </script>
+</body>
+
+</html>

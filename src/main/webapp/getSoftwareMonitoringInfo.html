@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>软件监控信息</title>
+	<link rel="stylesheet" href="./layui/css/layui.css">
+	<link rel="stylesheet" href="./css/body.css">
+	<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">查看软件监控信息</h2>
+		<hr>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">教学楼名称:</div>
+			<div class="layui-col-md8" id="buildName"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">课室名称:</div>
+			<div class="layui-col-md8" id="className"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">PC编号:</div>
+			<div class="layui-col-md8" id="pcCode"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">软件名称:</div>
+			<div class="layui-col-md8" id="softwareName"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">监控类型:</div>
+			<div class="layui-col-md8" id="isWhite"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">监控时间:</div>
+			<div class="layui-col-md8" id="date"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">监控文件:</div>
+			<div class="layui-col-md8" id="monitorFile"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">监控信息(记录时长):</div>
+			<div class="layui-col-md8" id="monitorTime"></div>
+		</div>
+		<div class="layui-row" style="margin-top: 10px;">
+			<div class="layui-col-md4">监控信息(警报):</div>
+			<div class="layui-col-md8" id="warning"></div>
+		</div>
+		<div class="layui-row for-img" style="margin-top: 10px;">
+			<div class="layui-col-md2">监控信息(截图):</div>
+			<div class="layui-col-md10" id="monitorImage">
+			</div>
+		</div>
+		<div class="layui-row for-video" style="margin-top: 10px;">
+			<div class="layui-col-md2">监控信息(录屏):</div>
+			<div class="layui-col-md10">
+				<video width="430" height="200" controls="controls" id="video" preload="auto">
+					<source id="video" src="" type="video/mp4">
+				</video>
+			</div>
+			</div>
+
+			<hr>
+			<div style="text-align: center;">
+				<button type="button" class="layui-btn" id="back" style="margin: 20px 0;">返回</button>
+			</div>
+		</div>
+
+		<script src="./js/jquery-3.2.1.min.js"></script>
+		<script src="./js/config.js"></script>
+		<script>
+			layui.use(['element','layer'],function(){
+				var element = layui.element;
+				var layer = layui.layer;
+
+			});
+
+			var softinfo_url = baseUrl +'pcMonitoring/getSoftwareStateById';
+			
+		//获取传参页面(getWebMonitoring.html)的url参数
+		function getQueryVariable(variable)
+		{
+			var query = window.location.search.substring(1);
+			var vars = query.split("&");
+			for (var i=0;i<vars.length;i++) {
+				var pair = vars[i].split("=");
+				if(pair[0] == variable){return pair[1];}
+			}
+			
+		}
+        var id = getQueryVariable('id');//获取url中id的值
+        //根据传过来的id重新请求数据
+        function ajaxgetSoftinfo(url,id){
+        	return $.ajax({
+        		type: 'post',
+        		url: url,
+        		data: {"id":id},
+        		contentType : 'application/x-www-form-urlencoded',
+        		dataType: 'json',
+        		success: function(res){
+        			$('#buildName').text(res.softwareState.buildName);
+        			$('#className').text(res.softwareState.className);
+        			$('#pcCode').text(res.softwareState.pcCode);
+        			$('#softwareName').text(res.softwareState.softName);
+        			$('#isWhite').text(res.softwareState.isWhite);
+        			$('#date').text(res.softwareState.date);
+        			$('#monitorFile').text(res.softwareState.file);
+        			$('#monitorTime').text(res.softwareState.useTime &&((res.softwareState.useTime/60).toFixed(1)));
+        			$('#warning').text(res.softwareState.warning);
+        			var pngArr = ['png','jpg','gif']
+					var videoArr = ['avi','wmv','mpeg','mp4','m4v','mov','asf','flv','f4v','rmvb','rm','3gp','vob']
+					var pngArr = ['png','jpg','gif']
+					var videoArr = ['avi','wmv','mpeg','mp4','m4v','mov','asf','flv','f4v','rmvb','rm','3gp','vob']
+					//截取文件的后缀名
+					//截取文件的后缀名
+					if(res.file){
+						var fileStr = res.file.split('.')[1].toLowerCase()						
+						//显示截图
+						var image = "<img src='' id='imgpath' alt='暂无截图' style='width:45%;height:100%;'>";
+						$('#monitorImage').html(image);
+						var imagePath = res.file
+						$('#imgpath').attr('src',imagePath);
+						//显示录屏
+						var videoPath =res.file;
+						$('#video').attr('src',videoPath);
+					} 
+					for(var i in pngArr){
+						if(res.file.indexOf(pngArr[i]) != -1){
+							$('.for-img').show()
+							$('.for-video').hide()
+							return false
+						}
+					}  
+					for(var j in videoArr){
+						if(res.file.indexOf(videoArr[j]) != -1){
+							$('.for-img').hide()
+							$('.for-video').show()
+							return false
+						}
+					}    			
+					if(res.file == ''){
+						$('.for-img').hide()
+						$('.for-video').hide()
+					}
+        		}
+        	})
+        }
+        ajaxgetSoftinfo(softinfo_url,id);
+
+        $('#back').click(function(){
+			// window.location.href = './getSoftwareMonitoring.html?orgcode='+schoolCode;
+			window.history.back();
+        });
+
+    </script>
+</body>
+</html>

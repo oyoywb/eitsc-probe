@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>查看异常数据</title>
+	<link rel="stylesheet" href="./layui/css/layui.css">
+	<link rel="stylesheet" href="./css/body.css">
+	<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">查看网站异常数据</h2>
+		<hr>
+		<form class="layui-form" action="#" method="post">
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">异常信息:</label>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" id="warning" style="border: none;background-color:#f2f2f2;" disabled="disabled" value="">
+					</div>
+				</div>
+				<div class="layui-inline">
+					<label class="layui-form-label">监控时间：</label>
+					<div class="layui-input-inline" style="width:100px;">
+						<input type="text" class="layui-input" id="monitor_time" style="border: none;" disabled="disabled" value="">
+					</div>
+				</div>
+				<div class="layui-inline">
+					<div class="layui-input-inline" style="width: 250px;">
+						<select name="buildCode" id="buildName" lay-search lay-verify="required">
+						</select>
+					</div>
+				</div>
+				<div class="layui-inline">
+					<button type="button" class="layui-btn" lay-submit lay-filter="search" id="search">查询</button>
+				</div>
+			</div>
+		</form>
+		<div class="website-table" id="website-table"></div>
+		<div class="pages" id="pages"></div>
+	</div>
+
+	<script type="text/html" id="Tpl">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th><div style="text-align: center;">课室名称</div></th>
+                    <th><div style="text-align: center;">PC编号</div></th>
+                    <th><div style="text-align: center;">网站名称</div></th>
+					<th><div style="text-align: center;">异常次数</div></th>
+                    <th><div style="text-align: center;">警报信息</div></th>
+                    <th><div style="text-align: center;">操作</div></th>
+				</tr> 
+			</thead>
+			<tbody>
+				{{#  layui.each(d.list, function(index, item){ }}
+				<tr>
+					<td><div style="text-align: center;">{{item.className}}</div></td>
+                    <td><div style="text-align: center;">{{item.pcCode}}</div></td>
+                    <th><div style="text-align: center;">{{item.name}}</div></th>
+					<td><div style="text-align: center;">{{item.count}}</div></td>
+					<td><div style="text-align: center;">{{item.warning || '无'}}</div>
+                    </td>
+                    <td>
+						<div style="text-align: center;">
+							<a class="layui-btn layui-btn-sm blue-bg check" onclick="detail({{item.id}})"><i class="layui-icon">&#xe660;</i>查看</a>
+						</div>
+					</td>
+				</tr>
+				{{#  }); }}
+			</tbody>
+		</table>
+
+		{{#  if(d.list==0){ }}
+		<div style="text-align: center;margin: 20px 0">暂无数据</div>
+		{{#  } }} 
+	</script>
+    <script src="./js/jquery-3.2.1.min.js"></script>
+    <script src="./js/config.js"></script>
+	<script>
+		layui.use(['element','form','laypage','layer','laytpl'],function(){
+			var element = layui.element;
+			var form = layui.form;
+            var layer = layui.layer;
+            var laytpl = layui.laytpl;
+            var laypage = layui.laypage;
+
+            var build_url = baseUrl +'pcMonitoring/getBuildInfo';
+            var web_url = baseUrl +'pcStatistics/getBlackWebStatisticsDetail';
+            var search_url = baseUrl +'pcStatistics/getBlackWebStatisticsDetail';
+            var schoolCode = getQueryVariable('orgcode');
+            var date = getQueryVariable('time');
+            //获取主页面传来的数据
+            $(function(){
+
+                function GetQueryString(time)
+                {
+                   var reg = new RegExp("(^|&)"+ time +"=([^&]*)(&|$)");
+                   var r = window.location.search.substr(1).match(reg);
+                   if(r!=null)return unescape(r[2]); return null;
+               }
+                var time = GetQueryString("time"); //获取传过来的监控时间
+               $('#monitor_time').attr('value',time);
+           });
+
+			//获取后台教学楼数据，回填到下拉框中
+            function getBuilddata(url,data,cb){
+                return $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    url: url,
+                    data: data,
+                    success:function(res){
+                    	//alert(JSON.stringify(res));
+                        cb && cb(res);
+                    }
+                });
+            }
+            window.detail = function(id){
+				window.location.href = './getWebMonitoringInfo.html?orgcode='+schoolCode+'&id='+id;
+			}
+            getBuilddata(build_url,{schoolCode:schoolCode},function(res){
+                var html = '<option value="">选择教学楼</option>';
+                if(res.code == 1){
+					for (x in res.list) {
+						html = html + '<option value="'+res.list[x].code+'">'+ res.list[x].name + '</option>';
+					}
+				}
+                $('#buildName').html(html);
+                form.render();
+            });
+
+            //获取软件异常信息
+            function ajaxWebsiteInfo(url, data, pageNum) {
+                //extend 函数用于将一个或多个对象的内容合并到目标对象
+                var websiteData = $.extend({}, data, pageNum);
+                $.ajax({
+                    type: 'post',
+                    url: url,
+                    data: websiteData,
+                    contentType : 'application/x-www-form-urlencoded',
+                    dataType: 'json',
+                    cache: false,
+                    //ajax请求之前
+                    beforeSend: function() {
+                        var index = layer.load(1);
+                    },
+                    //请求完成
+                    complete: function() {
+                        layer.closeAll('loading');
+                    },
+                    success: function(res) {
+                    	//alert(JSON.stringify(res));
+                        laypage.render({ //分页
+                            elem: 'pages' 
+                            ,
+                            count: res.total//数据总数，从服务端得到
+                            , 
+                            limit: websiteData.pageSize
+                            ,layout:['prev','page','next','count','skip']
+                            ,jump: function(obj, first) {
+                               websiteData.page = obj.curr;//当前页
+                               $.ajax({
+                                type: 'post',
+                                url: url,
+                                data: websiteData,
+                                contentType : 'application/x-www-form-urlencoded',
+                                dataType: 'json',
+                                cache: false,
+                                beforeSend: function() {
+                                    var index = layer.load(1);
+                                },
+                                complete: function() {
+                                    layer.closeAll('loading');
+                                },
+                                success: function(res) {
+                                    var get_Tpl = $('#Tpl').html();
+                                    laytpl(get_Tpl).render(res, function(html) {
+                                        $('#website-table').html(html);
+                                        $('#warning').val(res.list[0].warning || '无');
+                                    });
+                                }
+                            })
+                           }
+                       });
+                    },
+                    error:function(){
+                        layer.msg("请求数据失败",{icon:2});
+                    }
+                })
+            }
+
+            //pageNo是自定义的页数
+            ajaxWebsiteInfo(web_url, { page: 1, pageSize: 10,date:date,schoolCode:schoolCode,buildCode:$("#buildName").val()});
+
+            // 查询
+            form.on('submit(search)', function(data) {
+		        //data.field是表单中的所有数据
+		        ajaxWebsiteInfo(search_url, data.field,{
+		        	page: 1,
+                    pageSize: 10,
+                    date:date,
+                    schoolCode:schoolCode,
+                    buildCode:$("#buildName").val(),
+		        });
+		    });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>PC信息查看</title>
+<link rel="stylesheet" href="./layui/css/layui.css">
+<link rel="stylesheet" href="./css/body.css">
+<script src="./layui/layui.js"></script>
+</head>
+<body>
+	<div class="layui-container">
+		<h2 style="margin: 20px 0;">PC信息查看</h2>
+		<form class="layui-form">
+			<div class="layui-form-item" style="float: right;">
+				<div class="layui-inline">
+					<select name="build_name" id="build_name" lay-search
+						lay-filter="school">
+						<option value="">请输入教学楼名称</option>
+					</select>
+				</div>
+				<div class="layui-inline">
+					<button type="button" class="layui-btn" id="search" lay-submit
+						lay-filter="search">搜索</button>
+				</div>
+			</div>
+		</form>
+		<!--显示数据表格-->
+		<div class="PcInfo-table" id="PcInfo-table"></div>
+		<!--分页-->
+		<div class="pages" id="pages"></div>
+	</div>
+
+	<!--PC信息模板引擎-->
+	<script type="text/html" id="PcInfo_Tpl">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th><div style="text-align: center;">课室名称</div></th>
+					<th><div style="text-align: center;">PC编号</div></th>
+					<th><div style="text-align: center;">PC名称</div></th>
+					<th><div style="text-align: center;">品牌</div></th>
+					<th><div style="text-align: center;">型号</div></th>
+					<th><div style="text-align: center;">状态</div></th>
+					<th><div style="text-align: center;">厂商</div></th>
+					<th><div style="text-align: center;">SN码</div></th>
+				</tr> 
+			</thead>
+			<tbody>
+				{{#  layui.each(d.page.list, function(index, item){ }}
+				<tr>
+					<td><div style="text-align: center;">{{item.className}}</div></td>
+					<td><div style="text-align: center;">{{item.code}}</div></td>
+					<td><div style="text-align: center;">{{item.name}}</div></td>
+					<td><div style="text-align: center;">{{item.brandName}}</div></td>
+					<td><div style="text-align: center;">{{item.typeName}}</div></td>
+					<td><div style="text-align: center;">{{(item.state == 1)?'使用中':(item.state == 2)?'维修中':(item.state == 3)?'待报废':(item.state == 4)?'未使用':'未定义'}}</div></td>
+					<td><div style="text-align: center;">{{item.manufName}}</div></td>
+					<td><div style="text-align: center;">{{item.sn}}</div></td>
+				</tr>
+				{{#  }); }}
+
+			</tbody>
+		</table>
+
+		{{#  if(d.page.totalCount==0){ }}
+		<div style="text-align: center;margin: 20px 0">暂无数据</div>
+		{{#  } }} 
+	</script>
+
+	<script src="./js/jquery-3.2.1.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script>
+		layui.use(['form','table','laypage','laytpl'],function(){
+			var form = layui.form;
+			var table = layui.table;
+			var laypage = layui.laypage;
+			var laytpl = layui.laytpl;
+
+			var PcInfo_url = baseUrl +'pcMonitoring/getPcInfo';
+			var build_url = baseUrl +'pcMonitoring/getBuildInfo'
+			//获取后台数据，回填到下拉框中
+			function getdata(url, data, cb) {
+				return  $.ajax({
+					type: 'get',
+					dataType: 'json',
+					contentType: 'application/json;charset=utf-8',
+					url: url,
+					data: data,
+					success: function(res) {
+						cb && cb(res)
+					}
+				})
+			}
+			getdata(build_url,{schoolCode:schoolCode},function(res){
+				var html = '<option value="">请输入教学楼名称</option>';
+				if(res.code == 1){
+					for (x in res.list) {
+	            		html = html + '<option value="'+res.list[x].code+'">'+ res.list[x].name + '</option>';
+	           		}
+				}
+	            $("#build_name").html(html);
+	            form.render();
+	        });
+	       
+
+			//获取后台数据并显示并分页显示
+			function ajaxgetPcInfo(url, data, pageNum) {
+		        //extend 函数用于将一个或多个对象的内容合并到目标对象
+		        var pcinfoData = $.extend({}, data, pageNum);
+		       // console.log(url);
+		       $.ajax({
+		       	type: 'post',
+		       	url: url,
+		       	data: pcinfoData,
+		       	contentType : 'application/x-www-form-urlencoded',
+		       	dataType: 'json',
+		       	cache: false,
+		            //ajax请求之前
+		            beforeSend: function() {
+		            	var index = layer.load(1);
+		            },
+		            //请求完成
+		            complete: function() {
+		            	layer.closeAll('loading');
+		            },
+		            success: function(res) {
+		                laypage.render({ //分页
+		                	elem: 'pages' 
+		                	,
+		                    count: res.page.totalCount//数据总数，从服务端得到
+		                    , 
+		                    limit: pcinfoData.pageSize
+		                    ,
+		                    layout:['prev','page','next','total','skip']
+		                    ,  
+		                    jump: function(obj, first) {
+		                        pcinfoData.page = obj.curr;//当前页
+		                        $.ajax({
+		                        	type: 'post',
+		                        	url: url,
+		                        	data: pcinfoData,
+		                        	contentType : 'application/x-www-form-urlencoded',
+		                        	dataType: 'json',
+		                        	cache: false,
+		                        	beforeSend: function() {
+		                        		var index = layer.load(1);
+		                        	},
+		                        	complete: function() {
+		                        		layer.closeAll('loading');
+		                        	},
+		                        	success: function(res) {
+		                        		var getPcInfo_Tpl = $('#PcInfo_Tpl').html();
+		                        		laytpl(getPcInfo_Tpl).render(res, function(html) {
+		                        			$('#PcInfo-table').html(html);
+		                        		});
+		                        	}
+		                        })
+		                    }
+		                });
+		            },
+		            error:function(){
+		            	layer.msg("请求数据失败",{icon:2});
+		            }
+		        })
+		   }
+		   
+		    //pageNo是自定义的页数
+		    ajaxgetPcInfo(PcInfo_url, { page: 1, pageSize: 10,schoolCode:schoolCode,buildCode:$("#build_name").val()});
+		    
+		    // 搜索
+	        form.on('submit(search)', function(data) {
+		        //data.field是表单中的所有数据
+		        ajaxgetPcInfo(PcInfo_url, data.field,{
+		        	page: 1,
+		        	pageSize: 10,
+					schoolCode:schoolCode,
+					buildCode:$("#build_name").val()
+		        });
+		    });
+		    
+		   
+
+		});	
+	</script>
+</body>
+</html>

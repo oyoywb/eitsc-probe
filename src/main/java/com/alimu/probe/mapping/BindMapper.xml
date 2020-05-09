@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alimu.probe.dao.BindDao">
+	<insert id="saveProbeBind" parameterType="com.alimu.probe.entity.ProbeBind"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into probe_bind
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null"> school_code,</if>
+			<if test="pcCode!=null"> pc_code,</if>
+			<if test="pcIp!=null"> pc_ip ,</if>
+			<if test="pcMac!=null"> pc_mac</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="schoolCode!=null">#{schoolCode,jdbcType=BIGINT},</if>
+			<if test="pcCode!=null">#{pcCode,jdbcType=VARCHAR},</if>
+			<if test="pcIp!=null">#{pcIp,jdbcType=VARCHAR},</if>
+			<if test="pcMac!=null">#{pcMac,jdbcType=VARCHAR},</if>
+		</trim>
+	</insert>
+
+	<select id="getProbeBind" parameterType="Long" resultType="com.alimu.probe.entity.ProbeBind">
+		select * from probe_bind
+		<where>
+			<if test="schoolCode!=null">and school_code=#{schoolCode}</if>
+		</where>
+		order by id desc
+	</select>
+
+	<delete id="delProbeBind" parameterType="Long">
+		delete from probe_bind where id=#{id}
+	</delete>
+
+	<update id="updateProbeBind" parameterType="com.alimu.probe.entity.ProbeBind">
+		update probe_bind
+		<set>
+			<if test="schoolCode!=null"> school_code=#{schoolCode},</if>
+			<if test="pcCode!=null"> pc_code=#{pcCode},</if>
+			<if test="pcIp!=null"> pc_ip=#{pcIp} ,</if>
+			<if test="pcMac!=null"> pc_mac=#{pcMac}</if>
+		</set>
+		where id=#{id}
+	</update>
+	<select id="getProbeBindById" parameterType="Long" resultType="com.alimu.probe.entity.ProbeBind">
+		select * from probe_bind where id=#{id}
+	</select>
+	
+	<select id="getProbeBindByMac" parameterType="String" resultType="com.alimu.probe.entity.ProbeBind">
+		select pc_code,pc_ip,pc_mac from probe_bind where pc_mac=#{pcMac}
+	</select>
+	
+</mapper>
